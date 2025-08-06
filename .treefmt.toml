@@ -1,0 +1,15 @@
+[formatter.nix-alejandra]
+# Command to execute
+command = "alejandra"
+# Command-line arguments for the command
+options = []
+# Glob pattern of files to include
+includes = [ "*.nix" ]
+
+[formatter.nix-deadnix]
+# Command to execute
+command = "deadnix"
+# Command-line arguments for the command
+options = []
+# Glob pattern of files to include
+includes = [ "*.nix" ]
