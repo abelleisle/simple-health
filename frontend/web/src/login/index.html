@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Simple Health</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+      <div class="max-w-md w-full space-y-8">
+        <div>
+          <h2 class="mt-6 text-center text-3xl font-bold text-gray-900">
+            Sign in to Simple Health
+          </h2>
+          <p class="mt-2 text-center text-sm text-gray-600">
+            Track your health journey
+          </p>
+        </div>
+        <form class="mt-8 space-y-6" id="loginForm" action="/" method="post">
+          <div class="space-y-4">
+            <div>
+              <label for="username" class="block text-sm font-medium text-gray-700">
+                Username
+              </label>
+              <input
+                id="username"
+                name="username"
+                type="text"
+                required
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your username"
+              />
+            </div>
+            <div>
+              <label for="password" class="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <input
+                id="password"
+                name="password"
+                type="password"
+                required
+                class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                placeholder="Enter your password"
+              />
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="submit"
+              class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              Sign in
+            </button>
+          </div>
+
+          <div class="text-center">
+            <p class="text-sm text-gray-600">
+              Don't have an account? 
+              <a href="#" class="font-medium text-blue-600 hover:text-blue-500">
+                Sign up
+              </a>
+            </p>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      document.getElementById('loginForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+        const username = formData.get('username');
+        const password = formData.get('password');
+        
+        if (username && password) {
+          // Redirect to main app on successful login
+          window.location.href = '/';
+        }
+      });
+    </script>
+  </body>
+</html>
