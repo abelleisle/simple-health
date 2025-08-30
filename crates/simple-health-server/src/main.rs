@@ -1,4 +1,6 @@
-use axum::{Router, response::Json, routing::get};
+use axum::{
+    Router, body::Body, extract::Request, response::Json, response::Response, routing::get,
+};
 use std::path::PathBuf;
 use tower_http::{cors::CorsLayer, services::ServeDir};
 
@@ -20,6 +22,8 @@ fn create_app() -> Router {
 
     if let Some(static_dir) = get_static_dir() {
         app = app.fallback_service(ServeDir::new(static_dir));
+    } else {
+        app = app.fallback(proxy_to_frontend);
     }
 
     app
@@ -47,5 +51,32 @@ fn get_static_dir() -> Option<PathBuf> {
         }
     } else {
         None
+    }
+}
+
+async fn proxy_to_frontend(req: Request<Body>) -> Response<Body> {
+    let uri = req.uri();
+    let frontend_url = format!(
+        "http://localhost:5173{}",
+        uri.path_and_query().map(|pq| pq.as_str()).unwrap_or("/")
+    );
+
+    let client = reqwest::Client::new();
+    match client.get(&frontend_url).send().await {
+        Ok(resp) => {
+            let status = resp.status();
+            let headers = resp.headers().clone();
+            let body = resp.bytes().await.unwrap_or_default();
+
+            let mut response = Response::builder().status(status);
+            for (key, value) in headers.iter() {
+                response = response.header(key, value);
+            }
+            response.body(Body::from(body)).unwrap()
+        }
+        Err(_) => Response::builder()
+            .status(502)
+            .body(Body::from("Frontend dev server not available"))
+            .unwrap(),
     }
 }

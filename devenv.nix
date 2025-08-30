@@ -40,6 +40,7 @@ in {
     openssl
 
     auto-patchelf
+    watchexec
   ];
 
   # https://devenv.sh/languages/
