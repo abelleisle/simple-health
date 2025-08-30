@@ -51,7 +51,7 @@ in {
         enable = true;
         install.enable = true;
       };
-      directory = "frontend";
+      directory = "frontend/web";
     };
     typescript.enable = true;
   };
