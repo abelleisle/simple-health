@@ -2,9 +2,17 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
+pub fn is_built_version() -> bool {
+    std::env::var("CARGO_MANIFEST_DIR").is_err()
+}
+
 fn main() {
     let frontend_path = "../../frontend/web";
-    let dist_path = format!("{}/dist", frontend_path);
+    let dist_path = format!("{}/src/dist", frontend_path);
+
+    if !is_built_version() {
+        return;
+    }
 
     if Path::new(frontend_path).exists() {
         println!("cargo:rerun-if-changed=../../frontend/web/src");

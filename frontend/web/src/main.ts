@@ -1,5 +1,6 @@
 import './style.css'
 import type { DailyStats, User } from './types'
+import { api } from './api'
 
 const user: User = {
   id: '1',
@@ -10,6 +11,8 @@ const user: User = {
 
 const today = new Date().toISOString().split('T')[0];
 let selectedDate = today;
+let backendHealthy = false;
+let healthCheckMessage = 'Checking...';
 
 const mockStats: DailyStats = {
   date: selectedDate,
@@ -23,6 +26,13 @@ const mockStats: DailyStats = {
     snack: 0,
   },
 };
+
+async function checkBackendHealth() {
+  const result = await api.healthCheck();
+  backendHealthy = result.healthy;
+  healthCheckMessage = result.healthy ? 'Backend Healthy' : `Backend Offline: ${result.message}`;
+  renderDashboard();
+}
 
 function renderDashboard() {
   const progressPercentage = Math.min((mockStats.totalCalories / mockStats.goal) * 100, 100);
@@ -129,9 +139,25 @@ function renderDashboard() {
             `}
           </div>
         </div>
+
+        <!-- Backend Health Status -->
+        <div class="mt-8 pb-4">
+          <div class="flex items-center justify-center space-x-2 text-sm">
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 rounded-full ${backendHealthy ? 'bg-green-500' : 'bg-red-500'}"></div>
+              <span class="${backendHealthy ? 'text-green-600' : 'text-red-600'} font-medium">
+                ${healthCheckMessage}
+              </span>
+            </div>
+          </div>
+        </div>
       </main>
     </div>
   `;
 }
 
 renderDashboard();
+
+checkBackendHealth();
+
+setInterval(checkBackendHealth, 30000);
