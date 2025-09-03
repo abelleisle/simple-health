@@ -2,7 +2,7 @@
 
 This is a stub mirror. The full source code for this commit is at:
 
-https://git.bitcicle.com/andy/simple-health/src/commit/ece8b5ec0a22965c6559e49fe363e5baf5187769
+https://git.bitcicle.com/andy/simple-health/src/commit/0871e5b8f949b60de157c9e5ad6ef2cc9e74867a
 
 To browse or clone the full repository, visit:
 
