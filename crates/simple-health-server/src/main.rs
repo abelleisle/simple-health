@@ -18,6 +18,28 @@ async fn main() {
         .await
         .expect("Failed to connect to database");
 
+    // Create tables if they don't exist
+    if let Err(e) = db.create_tables_if_not_exists().await {
+        eprintln!("⚠️ Failed to create tables: {}", e);
+    }
+
+    // List database tables on startup
+    match db.list_tables().await {
+        Ok(tables) => {
+            if tables.is_empty() {
+                println!("📊 Database connected - No tables found");
+            } else {
+                println!("📊 Database connected - Found {} table(s):", tables.len());
+                for table in &tables {
+                    println!("  • {}", table);
+                }
+            }
+        }
+        Err(e) => {
+            eprintln!("⚠️ Failed to list database tables: {}", e);
+        }
+    }
+
     let state = ServerState { db };
     let app = create_app(state);
 

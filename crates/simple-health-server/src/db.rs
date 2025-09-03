@@ -2,8 +2,7 @@ mod postgresql;
 pub use postgresql::PostgresQL;
 
 use async_trait::async_trait;
-use std::sync::Arc;
-use tokio_postgres::{Client, Error, NoTls, Row};
+use tokio_postgres::Row;
 
 #[async_trait]
 pub trait DatabaseConnection: Send + Sync {
@@ -23,6 +22,12 @@ pub trait DatabaseConnection: Send + Sync {
         query: &str,
         params: &[&(dyn tokio_postgres::types::ToSql + Sync)],
     ) -> Result<Vec<Row>, Box<dyn std::error::Error + Send + Sync>>;
+
+    async fn list_tables(&self) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>>;
+
+    async fn create_tables_if_not_exists(
+        &self,
+    ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
     fn is_closed(&self) -> bool;
 
