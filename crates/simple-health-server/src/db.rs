@@ -1,27 +1,36 @@
-use std::sync::Arc;
-use tokio_postgres::{Client, Error, NoTls};
+mod postgresql;
+pub use postgresql::PostgresQL;
 
-#[derive(Clone)]
-pub struct Database {
-    pub client: Arc<Client>,
+use async_trait::async_trait;
+use std::sync::Arc;
+use tokio_postgres::{Client, Error, NoTls, Row};
+
+#[async_trait]
+pub trait DatabaseConnection: Send + Sync {
+    async fn connect()
+    -> Result<Box<dyn DatabaseConnection>, Box<dyn std::error::Error + Send + Sync>>
+    where
+        Self: Sized;
+
+    async fn execute(
+        &self,
+        query: &str,
+        params: &[&(dyn tokio_postgres::types::ToSql + Sync)],
+    ) -> Result<u64, Box<dyn std::error::Error + Send + Sync>>;
+
+    async fn query(
+        &self,
+        query: &str,
+        params: &[&(dyn tokio_postgres::types::ToSql + Sync)],
+    ) -> Result<Vec<Row>, Box<dyn std::error::Error + Send + Sync>>;
+
+    fn is_closed(&self) -> bool;
+
+    fn clone_box(&self) -> Box<dyn DatabaseConnection>;
 }
 
-impl Database {
-    pub async fn connect() -> Result<Self, Error> {
-        let (client, connection) = tokio_postgres::connect(
-            "host=localhost dbname=health user=gym password=membership",
-            NoTls,
-        )
-        .await?;
-
-        tokio::spawn(async move {
-            if let Err(e) = connection.await {
-                eprintln!("Database connection error: {}", e);
-            }
-        });
-
-        Ok(Database {
-            client: Arc::new(client),
-        })
+impl Clone for Box<dyn DatabaseConnection> {
+    fn clone(&self) -> Self {
+        self.clone_box()
     }
 }

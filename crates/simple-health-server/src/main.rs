@@ -5,14 +5,16 @@ mod utils;
 use axum::Router;
 use tower_http::{cors::CorsLayer, services::ServeDir};
 
+use crate::db::DatabaseConnection;
+
 #[derive(Clone)]
 pub struct ServerState {
-    pub db: db::Database,
+    pub db: Box<dyn db::DatabaseConnection>,
 }
 
 #[tokio::main]
 async fn main() {
-    let db = db::Database::connect()
+    let db = db::PostgresQL::connect()
         .await
         .expect("Failed to connect to database");
 
