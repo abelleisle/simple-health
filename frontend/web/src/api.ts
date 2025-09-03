@@ -7,9 +7,9 @@ class ApiManager {
 
   private getBaseUrl(): string {
     if (import.meta.env.DEV) {
-      return "http://localhost:3000";
+      return "http://localhost:3000/api/v1";
     }
-    return "";
+    return "/api/v1";
   }
 
   private async request<T>(
@@ -59,7 +59,7 @@ class ApiManager {
 
   async healthCheck(): Promise<{ healthy: boolean; message?: string }> {
     try {
-      await this.get("/api/v1/health");
+      await this.get("/health");
       return { healthy: true };
     } catch (error) {
       return {
