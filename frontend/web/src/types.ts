@@ -15,7 +15,7 @@ export interface FoodEntry {
   id: string;
   name: string;
   calories: number;
-  type: 'meal' | 'snack';
+  type: "meal" | "snack";
 }
 
 export interface User {

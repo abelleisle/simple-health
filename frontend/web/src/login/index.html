@@ -21,7 +21,10 @@
         <form class="mt-8 space-y-6" id="loginForm" action="/" method="post">
           <div class="space-y-4">
             <div>
-              <label for="username" class="block text-sm font-medium text-gray-700">
+              <label
+                for="username"
+                class="block text-sm font-medium text-gray-700"
+              >
                 Username
               </label>
               <input
@@ -34,7 +37,10 @@
               />
             </div>
             <div>
-              <label for="password" class="block text-sm font-medium text-gray-700">
+              <label
+                for="password"
+                class="block text-sm font-medium text-gray-700"
+              >
                 Password
               </label>
               <input
@@ -59,7 +65,7 @@
 
           <div class="text-center">
             <p class="text-sm text-gray-600">
-              Don't have an account? 
+              Don't have an account?
               <a href="#" class="font-medium text-blue-600 hover:text-blue-500">
                 Sign up
               </a>
@@ -70,17 +76,19 @@
     </div>
 
     <script>
-      document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const formData = new FormData(this);
-        const username = formData.get('username');
-        const password = formData.get('password');
-        
-        if (username && password) {
-          // Redirect to main app on successful login
-          window.location.href = '/';
-        }
-      });
+      document
+        .getElementById("loginForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const formData = new FormData(this);
+          const username = formData.get("username");
+          const password = formData.get("password");
+
+          if (username && password) {
+            // Redirect to main app on successful login
+            window.location.href = "/";
+          }
+        });
     </script>
   </body>
 </html>

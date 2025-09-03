@@ -111,8 +111,13 @@ in {
 
   # https://devenv.sh/git-hooks/
   git-hooks.hooks = {
-    rustfmt.enable = true;
-    clippy.enable = true;
+    clippy = {
+      enable = true;
+      packageOverrides = with pkgs; {
+        inherit cargo clippy;
+      };
+      settings.allFeatures = true;
+    };
     treefmt = {
       enable = true;
       settings = {

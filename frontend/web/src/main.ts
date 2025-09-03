@@ -1,18 +1,18 @@
-import './style.css'
-import type { DailyStats, User } from './types'
-import { api } from './api'
+import "./style.css";
+import type { DailyStats, User } from "./types";
+import { api } from "./api";
 
 const user: User = {
-  id: '1',
-  email: 'johnsmith@example.com',
-  name: 'John Smith',
-  calorieGoal: 2121
+  id: "1",
+  email: "johnsmith@example.com",
+  name: "John Smith",
+  calorieGoal: 2121,
 };
 
-const today = new Date().toISOString().split('T')[0];
+const today = new Date().toISOString().split("T")[0];
 let selectedDate = today;
 let backendHealthy = false;
-let healthCheckMessage = 'Checking...';
+let healthCheckMessage = "Checking...";
 
 const mockStats: DailyStats = {
   date: selectedDate,
@@ -30,15 +30,23 @@ const mockStats: DailyStats = {
 async function checkBackendHealth() {
   const result = await api.healthCheck();
   backendHealthy = result.healthy;
-  healthCheckMessage = result.healthy ? 'Backend Healthy' : `Backend Offline: ${result.message}`;
+  healthCheckMessage = result.healthy
+    ? "Backend Healthy"
+    : `Backend Offline: ${result.message}`;
   renderDashboard();
 }
 
 function renderDashboard() {
-  const progressPercentage = Math.min((mockStats.totalCalories / mockStats.goal) * 100, 100);
-  const remainingCalories = Math.max(mockStats.goal - mockStats.totalCalories, 0);
+  const progressPercentage = Math.min(
+    (mockStats.totalCalories / mockStats.goal) * 100,
+    100,
+  );
+  const remainingCalories = Math.max(
+    mockStats.goal - mockStats.totalCalories,
+    0,
+  );
 
-  document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
+  document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
     <div class="min-h-screen bg-gray-50">
       <header class="bg-white shadow">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -107,26 +115,35 @@ function renderDashboard() {
           <div class="bg-white p-6 rounded-lg shadow col-span-full">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Meal Breakdown</h2>
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-              ${Object.entries(mockStats.mealBreakdown).map(([meal, calories]) => `
+              ${Object.entries(mockStats.mealBreakdown)
+                .map(
+                  ([meal, calories]) => `
                 <div class="text-center p-4 bg-gray-50 rounded-lg">
                   <h3 class="font-medium text-gray-900 capitalize">${meal}</h3>
                   <p class="text-2xl font-bold text-blue-600">${calories}</p>
                   <p class="text-sm text-gray-600">calories</p>
                 </div>
-              `).join('')}
+              `,
+                )
+                .join("")}
             </div>
           </div>
 
           <!-- Recent Entries -->
           <div class="bg-white p-6 rounded-lg shadow col-span-full">
             <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Entries</h2>
-            ${mockStats.entries.length === 0 ? `
+            ${
+              mockStats.entries.length === 0
+                ? `
               <p class="text-gray-600 text-center py-8">
                 No food entries for this date. Add some foods to get started!
               </p>
-            ` : `
+            `
+                : `
               <div class="space-y-2">
-                ${mockStats.entries.map((entry) => `
+                ${mockStats.entries
+                  .map(
+                    (entry) => `
                   <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
                     <div>
                       <p class="font-medium">${entry.name}</p>
@@ -134,9 +151,12 @@ function renderDashboard() {
                     </div>
                     <p class="font-semibold text-blue-600">${entry.calories} cal</p>
                   </div>
-                `).join('')}
+                `,
+                  )
+                  .join("")}
               </div>
-            `}
+            `
+            }
           </div>
         </div>
 
@@ -144,8 +164,8 @@ function renderDashboard() {
         <div class="mt-8 pb-4">
           <div class="flex items-center justify-center space-x-2 text-sm">
             <div class="flex items-center space-x-2">
-              <div class="w-3 h-3 rounded-full ${backendHealthy ? 'bg-green-500' : 'bg-red-500'}"></div>
-              <span class="${backendHealthy ? 'text-green-600' : 'text-red-600'} font-medium">
+              <div class="w-3 h-3 rounded-full ${backendHealthy ? "bg-green-500" : "bg-red-500"}"></div>
+              <span class="${backendHealthy ? "text-green-600" : "text-red-600"} font-medium">
                 ${healthCheckMessage}
               </span>
             </div>
