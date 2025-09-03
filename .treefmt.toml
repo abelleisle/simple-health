@@ -1,15 +1,32 @@
+# Nix formatters
 [formatter.nix-alejandra]
-# Command to execute
 command = "alejandra"
-# Command-line arguments for the command
 options = []
-# Glob pattern of files to include
 includes = [ "*.nix" ]
 
 [formatter.nix-deadnix]
-# Command to execute
 command = "deadnix"
-# Command-line arguments for the command
 options = []
-# Glob pattern of files to include
 includes = [ "*.nix" ]
+
+# Rust formatter
+[formatter.rust]
+command = "rustfmt"
+options = ["--edition", "2021"]
+includes = ["*.rs"]
+
+# TypeScript/JavaScript formatter
+[formatter.prettier]
+command = "prettier"
+options = ["--write"]
+includes = [
+  "*.js",
+  "*.jsx",
+  "*.ts",
+  "*.tsx",
+  "*.json",
+  "*.html",
+  "*.css",
+  "*.scss",
+  "*.md"
+]

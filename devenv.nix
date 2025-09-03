@@ -117,8 +117,15 @@ in {
       enable = true;
       settings = {
         formatters = with pkgs; [
+          # Nix
           alejandra
           deadnix
+          # Rust
+          rustfmt
+          # TypeScript/JavaScript
+          nodePackages.prettier
+          # HTML/CSS (prettier handles these too)
+          # Additional formatters can be added here
         ];
       };
     };
