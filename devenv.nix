@@ -38,6 +38,7 @@ in {
     pango
     webkitgtk_4_1
     openssl
+    postgresql
 
     auto-patchelf
     watchexec
@@ -64,27 +65,56 @@ in {
 
   # https://devenv.sh/services/
   services = {
-    nginx = {
+    postgres = {
       enable = true;
-      httpConfig = ''
-        server {
-          listen 8080;
-          # server_name your-domain.com;
-
-          root ${config.env.DEVENV_ROOT}/frontend/dist;
-          index index.html;
-
-          location / {
-            try_files $uri $uri/ =404;
-          }
-
-          # location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg)$ {
-          #   expires 1y;
-          #   add_header Cache-Control "public, immutable";
-          # }
+      package = pkgs.postgresql;
+      initialDatabases = [
+        {
+          name = "health";
+          user = "gym";
+          pass = "membership";
         }
+      ];
+      listen_addresses = "::";
+      extensions = extensions: [
+        # extensions.postgis
+        # extensions.timescaledb
+      ];
+      hbaConf = ''
+        # Allow the gym user to connect from localhost with password
+        local   all             gym                                     md5
+        host    all             gym             127.0.0.1/32            md5
+        host    all             gym             ::1/128                 md5
+
+        # Default rules for other users
+        local   all             all                                     trust
+        host    all             all             127.0.0.1/32            trust
+        host    all             all             ::1/128                 trust
       '';
+      # settings.shared_preload_libraries = "timescaledb";
+      # initialScript = "CREATE EXTENSION IF NOT EXISTS timescaledb;";
     };
+    # nginx = {
+    #   enable = true;
+    #   httpConfig = ''
+    #     server {
+    #       listen 8080;
+    #       # server_name your-domain.com;
+    #
+    #       root ${config.env.DEVENV_ROOT}/frontend/dist;
+    #       index index.html;
+    #
+    #       location / {
+    #         try_files $uri $uri/ =404;
+    #       }
+    #
+    #       # location ~* \.(css|js|png|jpg|jpeg|gif|ico|svg)$ {
+    #       #   expires 1y;
+    #       #   add_header Cache-Control "public, immutable";
+    #       # }
+    #     }
+    #   '';
+    # };
   };
 
   # https://devenv.sh/scripts/

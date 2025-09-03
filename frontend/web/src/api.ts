@@ -57,10 +57,14 @@ class ApiManager {
     return this.request<T>(endpoint, { method: "DELETE" });
   }
 
-  async healthCheck(): Promise<{ healthy: boolean; message?: string }> {
+  async healthCheck(): Promise<{
+    healthy: boolean;
+    database?: boolean;
+    message?: string;
+  }> {
     try {
-      await this.get("/health");
-      return { healthy: true };
+      const healthData = await this.get<{ database: boolean }>("/health");
+      return { healthy: true, database: healthData.database };
     } catch (error) {
       return {
         healthy: false,

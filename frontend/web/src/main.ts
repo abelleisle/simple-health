@@ -12,6 +12,7 @@ const user: User = {
 const today = new Date().toISOString().split("T")[0];
 let selectedDate = today;
 let backendHealthy = false;
+let databaseConnected: boolean | undefined = undefined;
 let healthCheckMessage = "Checking...";
 
 const mockStats: DailyStats = {
@@ -30,6 +31,7 @@ const mockStats: DailyStats = {
 async function checkBackendHealth() {
   const result = await api.healthCheck();
   backendHealthy = result.healthy;
+  databaseConnected = result.database;
   healthCheckMessage = result.healthy
     ? "Backend Healthy"
     : `Backend Offline: ${result.message}`;
@@ -162,13 +164,25 @@ function renderDashboard() {
 
         <!-- Backend Health Status -->
         <div class="mt-8 pb-4">
-          <div class="flex items-center justify-center space-x-2 text-sm">
+          <div class="flex items-center justify-center space-x-6 text-sm">
             <div class="flex items-center space-x-2">
               <div class="w-3 h-3 rounded-full ${backendHealthy ? "bg-green-500" : "bg-red-500"}"></div>
               <span class="${backendHealthy ? "text-green-600" : "text-red-600"} font-medium">
                 ${healthCheckMessage}
               </span>
             </div>
+            ${
+              databaseConnected !== undefined
+                ? `
+            <div class="flex items-center space-x-2">
+              <div class="w-3 h-3 rounded-full ${databaseConnected ? "bg-green-500" : "bg-red-500"}"></div>
+              <span class="${databaseConnected ? "text-green-600" : "text-red-600"} font-medium">
+                Database ${databaseConnected ? "Connected" : "Disconnected"}
+              </span>
+            </div>
+            `
+                : ""
+            }
           </div>
         </div>
       </main>
