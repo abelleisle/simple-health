@@ -6,23 +6,21 @@ mod utils;
 use axum::Router;
 use tower_http::{cors::CorsLayer, services::ServeDir};
 
-use crate::db::DatabaseConnection;
-
 #[derive(Clone)]
 pub struct ServerState {
-    pub db: Box<dyn db::DatabaseConnection>,
+    pub db: db::DatabaseConnection,
 }
 
 #[tokio::main]
 async fn main() {
-    let db = db::PostgresQL::connect()
+    let db = db::DatabaseConnection::connect()
         .await
         .expect("Failed to connect to database");
 
     // Create tables if they don't exist
-    // if let Err(e) = db.create_tables_if_not_exists().await {
-    //     eprintln!("⚠️ Failed to create tables: {}", e);
-    // }
+    if let Err(e) = db.create_all_tables().await {
+        eprintln!("⚠️ Failed to create tables: {}", e);
+    }
 
     // List database tables on startup
     match db.list_tables().await {

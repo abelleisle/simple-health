@@ -1,14 +1,30 @@
-// @generated automatically by Diesel CLI.
+use inventory;
 
-diesel::table! {
-    users (id) {
-        id -> Uuid,
-        #[max_length = 255]
-        email -> Varchar,
-        #[max_length = 255]
-        name -> Varchar,
-        calorie_goal -> Int4,
-        created_at -> Nullable<Timestamptz>,
-        updated_at -> Nullable<Timestamptz>,
-    }
+pub trait TableRequired {
+    const CREATE_TABLE_SQL: &'static str;
+    const TABLE_NAME: &'static str;
+}
+
+pub struct TableSchema {
+    pub name: &'static str,
+    pub sql: &'static str,
+}
+
+inventory::collect!(TableSchema);
+
+// Macro to make registration easier
+#[macro_export]
+macro_rules! register_table {
+    ($type:ty) => {
+        inventory::submit! {
+            crate::db::schema::TableSchema {
+                name: <$type>::TABLE_NAME,
+                sql: <$type>::CREATE_TABLE_SQL,
+            }
+        }
+    };
+}
+
+pub fn get_all_table_schemas() -> impl Iterator<Item = &'static TableSchema> {
+    inventory::iter::<TableSchema>()
 }
