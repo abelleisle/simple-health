@@ -42,6 +42,7 @@ in {
 
     auto-patchelf
     watchexec
+    diesel-cli
   ];
 
   # https://devenv.sh/languages/
@@ -56,6 +57,10 @@ in {
       directory = "frontend/web";
     };
     typescript.enable = true;
+  };
+
+  env = {
+    DATABASE_URL = "postgres://gym:membership@localhost/health";
   };
 
   # env.LD_LIBRARY_PATH = libPath;

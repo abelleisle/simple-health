@@ -1,3 +1,5 @@
+pub mod schema;
+
 mod postgresql;
 pub use postgresql::PostgresQL;
 
