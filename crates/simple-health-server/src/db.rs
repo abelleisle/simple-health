@@ -1,10 +1,8 @@
-pub mod schema;
-
 mod postgresql;
 pub use postgresql::PostgresQL;
 
 use async_trait::async_trait;
-use tokio_postgres::Row;
+use serde_json::Value;
 
 #[async_trait]
 pub trait DatabaseConnection: Send + Sync {
@@ -13,17 +11,17 @@ pub trait DatabaseConnection: Send + Sync {
     where
         Self: Sized;
 
-    async fn execute(
-        &self,
-        query: &str,
-        params: &[&(dyn tokio_postgres::types::ToSql + Sync)],
-    ) -> Result<u64, Box<dyn std::error::Error + Send + Sync>>;
+    async fn execute(&self, query: &str) -> Result<u64, Box<dyn std::error::Error + Send + Sync>>;
 
-    async fn query(
+    async fn fetch_all_json(
         &self,
         query: &str,
-        params: &[&(dyn tokio_postgres::types::ToSql + Sync)],
-    ) -> Result<Vec<Row>, Box<dyn std::error::Error + Send + Sync>>;
+    ) -> Result<Vec<Value>, Box<dyn std::error::Error + Send + Sync>>;
+
+    async fn fetch_one_json(
+        &self,
+        query: &str,
+    ) -> Result<Option<Value>, Box<dyn std::error::Error + Send + Sync>>;
 
     async fn list_tables(&self) -> Result<Vec<String>, Box<dyn std::error::Error + Send + Sync>>;
 
@@ -31,7 +29,7 @@ pub trait DatabaseConnection: Send + Sync {
         &self,
     ) -> Result<(), Box<dyn std::error::Error + Send + Sync>>;
 
-    fn is_closed(&self) -> bool;
+    fn is_connected(&self) -> bool;
 
     fn clone_box(&self) -> Box<dyn DatabaseConnection>;
 }

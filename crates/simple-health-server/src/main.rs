@@ -1,4 +1,5 @@
 mod api;
+mod core;
 mod db;
 mod utils;
 
@@ -19,9 +20,9 @@ async fn main() {
         .expect("Failed to connect to database");
 
     // Create tables if they don't exist
-    if let Err(e) = db.create_tables_if_not_exists().await {
-        eprintln!("⚠️ Failed to create tables: {}", e);
-    }
+    // if let Err(e) = db.create_tables_if_not_exists().await {
+    //     eprintln!("⚠️ Failed to create tables: {}", e);
+    // }
 
     // List database tables on startup
     match db.list_tables().await {

@@ -11,6 +11,6 @@ async fn health_check(State(state): State<ServerState>) -> Json<serde_json::Valu
     Json(serde_json::json!({
         "status": "healthy",
         "timestamp": chrono::Utc::now().to_rfc3339(),
-        "database": !db.is_closed()
+        "database": db.is_connected()
     }))
 }
