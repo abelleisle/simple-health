@@ -1,3 +1,6 @@
+use crate::db::schema::TableRequired;
+use crate::register_table;
+
 use sqlx::PgPool;
 use uuid::Uuid;
 
@@ -60,3 +63,19 @@ impl User {
         Ok(result.rows_affected() > 0)
     }
 }
+
+impl TableRequired for User {
+    const CREATE_TABLE_SQL: &'static str = "CREATE TABLE IF NOT EXISTS users (
+        id UUID PRIMARY KEY,
+        email VARCHAR(255) NOT NULL UNIQUE,
+        password_hash VARCHAR(255) NOT NULL,
+        name VARCHAR(255) NOT NULL,
+        calorie_goal INTEGER NOT NULL,
+        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )";
+
+    const TABLE_NAME: &'static str = "users";
+}
+
+register_table!(User);

@@ -15,5 +15,5 @@ sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio", "time", "uu
 tokio = { version = "1.47.1", features = ["full"] }
 tower = "0.5.2"
 tower-http = { version = "0.6.6", features = ["fs", "cors"] }
-ts-rs = { version = "11.0.1", features = ["uuid", "uuid-impl"] }
+ts-rs = { version = "11.0.1", features = ["chrono-impl", "uuid", "uuid-impl"] }
 uuid = { version = "1.0", features = ["serde", "v4"] }

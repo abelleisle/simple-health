@@ -1,10 +1,10 @@
-use crate::db::schema::TableRequired;
-use crate::register_table;
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use ts_rs::TS;
 use uuid::Uuid;
 
+mod entry;
 mod user;
 
 #[derive(FromRow, Clone, Debug, Serialize, Deserialize, TS)]
@@ -15,20 +15,6 @@ pub struct User {
     pub password_hash: String,
     pub name: String,
     pub calorie_goal: i32,
-}
-
-impl TableRequired for User {
-    const CREATE_TABLE_SQL: &'static str = "CREATE TABLE IF NOT EXISTS users (
-        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        email VARCHAR(255) NOT NULL UNIQUE,
-        password_hash VARCHAR(255) NOT NULL,
-        name VARCHAR(255) NOT NULL,
-        calorie_goal INTEGER NOT NULL,
-        created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-        updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    )";
-
-    const TABLE_NAME: &'static str = "users";
 }
 
 impl User {
@@ -43,4 +29,35 @@ impl User {
     }
 }
 
-register_table!(User);
+#[derive(sqlx::Type, Clone, Debug, Serialize, Deserialize, TS)]
+pub enum FoodType {
+    Meal,
+    Snack,
+    Drink,
+}
+
+#[derive(FromRow, Clone, Debug, Serialize, Deserialize, TS)]
+pub struct FoodEntry {
+    pub id: Uuid,
+    pub name: String,
+    pub calories: i32,
+    pub entry_type: FoodType,
+    pub time: DateTime<Utc>,
+}
+
+impl FoodEntry {
+    pub fn new(
+        name: String,
+        calories: i32,
+        entry_type: FoodType,
+        time: Option<DateTime<Utc>>,
+    ) -> Self {
+        Self {
+            id: Uuid::new_v4(),
+            name: name,
+            calories: calories,
+            entry_type: entry_type,
+            time: if let Some(tt) = time { tt } else { Utc::now() },
+        }
+    }
+}
