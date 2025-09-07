@@ -6,6 +6,8 @@ mod utils;
 use axum::Router;
 use tower_http::{cors::CorsLayer, services::ServeDir};
 
+use core::types::User;
+
 #[derive(Clone)]
 pub struct ServerState {
     pub db: db::DatabaseConnection,
@@ -29,6 +31,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         log::warn!("Failed to print database stats. Reason: {e}");
         e
     })?;
+
+    let user = create_test_user(
+        db.get_pool(),
+        "user@example.com".to_string(),
+        "12345".to_string(),
+        "Test User".to_string(),
+    )
+    .await?;
+
+    log::info!("User uuid: {}", user.id);
 
     let state = ServerState { db };
     let app = create_app(state);
@@ -65,4 +77,23 @@ fn create_app(state: ServerState) -> Router {
     }
 
     app
+}
+
+async fn create_test_user(
+    pool: &db::DBPool,
+    email: String,
+    password_hash: String,
+    name: String,
+) -> Result<User, Box<dyn std::error::Error + Sync + Send>> {
+    let get_user = User::get(pool, None, Some(&email)).await?;
+    match get_user {
+        Some(u) => {
+            log::debug!("Got existing user {}", u.id);
+            Ok(u)
+        }
+        None => {
+            log::debug!("Creating new user with email {}", email);
+            Ok(User::new(pool, email, password_hash, name).await?)
+        }
+    }
 }

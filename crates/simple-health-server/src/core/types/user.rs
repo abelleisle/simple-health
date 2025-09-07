@@ -34,7 +34,7 @@ impl User {
             (Some(user_id), Some(user_email)) => {
                 // Both provided - use OR condition
                 sqlx::query_as::<_, User>(
-                    "SELECT id, email, name, calorie_goal, created_at, updated_at
+                    "SELECT id, email, name, created_at, updated_at
                    FROM users WHERE id = $1 AND email = $2",
                 )
                 .bind(user_id)
@@ -45,7 +45,7 @@ impl User {
             (Some(user_id), None) => {
                 // ID only
                 sqlx::query_as::<_, User>(
-                    "SELECT id, email, name, calorie_goal, created_at, updated_at
+                    "SELECT id, email, name, created_at, updated_at
                    FROM users WHERE id = $1",
                 )
                 .bind(user_id)
@@ -55,7 +55,7 @@ impl User {
             (None, Some(user_email)) => {
                 // Email only
                 sqlx::query_as::<_, User>(
-                    "SELECT id, email, name, calorie_goal, created_at, updated_at
+                    "SELECT id, email, name, created_at, updated_at
                    FROM users WHERE email = $1",
                 )
                 .bind(user_email)
