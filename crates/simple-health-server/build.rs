@@ -62,5 +62,6 @@ fn copy_dir(src: &str, dst: &str) -> std::io::Result<()> {
             fs::copy(&path, &dest_path)?;
         }
     }
+
     Ok(())
 }

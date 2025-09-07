@@ -1,6 +1,4 @@
 use crate::db;
-use crate::db::schema::TableRequired;
-use crate::register_table;
 
 use sqlx::PgPool;
 use uuid::Uuid;

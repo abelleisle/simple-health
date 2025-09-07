@@ -8,10 +8,12 @@ async-trait = "0.1"
 axum = "0.8.4"
 chrono = { version = "0.4.41", features = ["serde"] }
 inventory = "0.3.21"
+log = { version = "0.4.28", features = ["max_level_debug", "release_max_level_warn"] }
 reqwest = "0.12.23"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.143"
 sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio", "time", "uuid", "chrono", "sqlite", "any"] }
+std-logger = "0.5.7"
 tokio = { version = "1.47.1", features = ["full"] }
 tower = "0.5.2"
 tower-http = { version = "0.6.6", features = ["fs", "cors"] }

@@ -1,7 +1,4 @@
-pub mod schema;
-
-use serde_json::Value;
-use sqlx::{Column, Executor, PgPool, Row, TypeInfo};
+use sqlx::{Executor, PgPool, Row};
 
 pub type DBPool = PgPool;
 
@@ -17,9 +14,7 @@ impl DatabaseConnection {
 
         let pool = PgPool::connect(&database_url).await?;
 
-        // Now that we're connected, let's execute our migrations
-        // This will create and/or update tables, functions, types, etc..
-        sqlx::migrate!("./migrations/").run(&pool).await?;
+        log::info!("Connected to db");
 
         Ok(Self { pool })
     }
@@ -105,18 +100,34 @@ impl DatabaseConnection {
         !self.pool.is_closed()
     }
 
-    pub async fn create_all_tables(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
-        let tables = self.list_tables().await?;
+    pub async fn run_migrations(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        log::info!("Starting database migrations");
 
-        for table in schema::get_all_table_schemas() {
-            if tables.iter().any(|t| t.as_str() == table.name) {
-                println!("Table {} already exists", table.name);
-            } else {
-                println!("Creating table: {}", table.name);
-                self.execute(table.sql).await?;
-            }
-            println!("✅ {} table created/verified", table.name);
-        }
+        // Now that we're connected, let's execute our migrations
+        // This will create and/or update tables, functions, types, etc..
+        sqlx::migrate!("./migrations/").run(&self.pool).await?;
+
+        log::info!("Database migrations comlete");
+
         Ok(())
+    }
+
+    pub async fn show_debug_stats(&self) -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+        match self.list_tables().await {
+            Ok(tables) => {
+                if tables.is_empty() {
+                    log::warn!("No tables found, maybe migrations failed?");
+                } else {
+                    let tables_str = tables.join(", ");
+                    log::info!("Found {} tables: {}", tables.len(), tables_str);
+                }
+
+                Ok(())
+            }
+            Err(e) => {
+                log::error!("Failed to list database tables: {}", e);
+                Err(e)
+            }
+        }
     }
 }

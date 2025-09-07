@@ -12,34 +12,40 @@ pub struct ServerState {
 }
 
 #[tokio::main]
-async fn main() {
-    let db = db::DatabaseConnection::connect()
-        .await
-        .expect("Failed to connect to database");
+async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+    std_logger::Config::logfmt().init();
 
-    // List database tables on startup
-    match db.list_tables().await {
-        Ok(tables) => {
-            if tables.is_empty() {
-                println!("📊 Database connected - No tables found");
-            } else {
-                println!("📊 Database connected - Found {} table(s):", tables.len());
-                for table in &tables {
-                    println!("  • {}", table);
-                }
-            }
-        }
-        Err(e) => {
-            eprintln!("⚠️ Failed to list database tables: {}", e);
-        }
-    }
+    let db = db::DatabaseConnection::connect().await.map_err(|e| {
+        log::error!("Failed to connect to database: {}", e);
+        e
+    })?;
+
+    db.run_migrations().await.map_err(|e| {
+        log::error!("Database migrations failed :( Reason: {e}");
+        e
+    })?;
+
+    db.show_debug_stats().await.map_err(|e| {
+        log::warn!("Failed to print database stats. Reason: {e}");
+        e
+    })?;
 
     let state = ServerState { db };
     let app = create_app(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:3000").await.unwrap();
-    println!("Server running on http://localhost:3000");
-    axum::serve(listener, app).await.unwrap();
+    let addr = "0.0.0.0:3000";
+    let listener = tokio::net::TcpListener::bind(addr).await.map_err(|e| {
+        log::warn!("Failed to bind backend address: {e}");
+        e
+    })?;
+
+    log::info!("Server running on {addr}");
+    axum::serve(listener, app).await.map_err(|e| {
+        log::warn!("Failed to start axum backend server: {e}");
+        e
+    })?;
+
+    Ok(())
 }
 
 fn create_app(state: ServerState) -> Router {

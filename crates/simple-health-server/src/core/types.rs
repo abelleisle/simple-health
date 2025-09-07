@@ -8,8 +8,6 @@ use uuid::Uuid;
 mod meal;
 mod user;
 
-use crate::db;
-
 pub enum UserRef {
     User(User),
     ID(Uuid),
