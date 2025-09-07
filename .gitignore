@@ -10,3 +10,6 @@ devenv.local.nix
 
 # Rust binaries
 target/
+
+# vim sessions
+Session.vim

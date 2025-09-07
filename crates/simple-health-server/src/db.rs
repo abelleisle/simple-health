@@ -3,9 +3,11 @@ pub mod schema;
 use serde_json::Value;
 use sqlx::{Column, Executor, PgPool, Row, TypeInfo};
 
+pub type DBPool = PgPool;
+
 #[derive(Clone)]
 pub struct DatabaseConnection {
-    pool: PgPool,
+    pool: DBPool,
 }
 
 impl DatabaseConnection {
@@ -14,6 +16,10 @@ impl DatabaseConnection {
             .unwrap_or_else(|_| "postgres://gym:membership@localhost/health".to_string());
 
         let pool = PgPool::connect(&database_url).await?;
+
+        // Now that we're connected, let's execute our migrations
+        // This will create and/or update tables, functions, types, etc..
+        sqlx::migrate!("./migrations/").run(&pool).await?;
 
         Ok(Self { pool })
     }

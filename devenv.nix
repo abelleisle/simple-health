@@ -43,6 +43,7 @@ in {
     auto-patchelf
     watchexec
     diesel-cli
+    sqlx-cli
   ];
 
   # https://devenv.sh/languages/

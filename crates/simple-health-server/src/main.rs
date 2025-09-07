@@ -17,11 +17,6 @@ async fn main() {
         .await
         .expect("Failed to connect to database");
 
-    // Create tables if they don't exist
-    if let Err(e) = db.create_all_tables().await {
-        eprintln!("⚠️ Failed to create tables: {}", e);
-    }
-
     // List database tables on startup
     match db.list_tables().await {
         Ok(tables) => {
