@@ -1,3 +1,6 @@
+use crate::core::types::{Goal, UserRef};
+use crate::db;
+
 impl Goal {
     pub async fn new(
         pool: &db::DBPool,

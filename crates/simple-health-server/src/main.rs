@@ -1,12 +1,13 @@
 mod api;
 mod core;
 mod db;
+mod session;
 mod utils;
 
 use axum::Router;
 use tower_http::{cors::CorsLayer, services::ServeDir};
 
-use core::types::User;
+use core::types::{Signup, User};
 
 #[derive(Clone)]
 pub struct ServerState {
@@ -32,13 +33,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         e
     })?;
 
-    let user = create_test_user(
-        db.get_pool(),
-        "user@example.com".to_string(),
-        "12345".to_string(),
-        "Test User".to_string(),
-    )
-    .await?;
+    let signup = Signup {
+        email: "user@example.com".to_string(),
+        password_hash: "12345".to_string(),
+        name: "Test User".to_string(),
+    };
+
+    let user = create_test_user(db.get_pool(), &signup).await?;
 
     log::info!("User uuid: {}", user.id);
 
@@ -81,19 +82,17 @@ fn create_app(state: ServerState) -> Router {
 
 async fn create_test_user(
     pool: &db::DBPool,
-    email: String,
-    password_hash: String,
-    name: String,
+    signup: &Signup,
 ) -> Result<User, Box<dyn std::error::Error + Sync + Send>> {
-    let get_user = User::get(pool, None, Some(&email)).await?;
+    let get_user = User::get(pool, None, Some(&signup.email)).await?;
     match get_user {
         Some(u) => {
             log::debug!("Got existing user {}", u.id);
             Ok(u)
         }
         None => {
-            log::debug!("Creating new user with email {}", email);
-            Ok(User::new(pool, email, password_hash, name).await?)
+            log::debug!("Creating new user with email {}", signup.email);
+            Ok(User::new(pool, signup).await?)
         }
     }
 }

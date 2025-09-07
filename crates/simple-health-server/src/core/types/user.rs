@@ -3,22 +3,17 @@ use crate::db;
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::core::types::User;
+use crate::core::types::{Signup, User};
 
 impl User {
-    pub async fn new(
-        pool: &db::DBPool,
-        email: String,
-        password_hash: String,
-        name: String,
-    ) -> Result<User, sqlx::Error> {
+    pub async fn new(pool: &db::DBPool, signup: &Signup) -> Result<User, sqlx::Error> {
         let user = sqlx::query_as::<_, User>(
             "INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3)
             RETURNING id, email, name",
         )
-        .bind(email)
-        .bind(password_hash)
-        .bind(name)
+        .bind(&signup.email)
+        .bind(&signup.password_hash)
+        .bind(&signup.name)
         .fetch_one(pool)
         .await;
 

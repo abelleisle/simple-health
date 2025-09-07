@@ -4,9 +4,17 @@ use sqlx::FromRow;
 use ts_rs::TS;
 use uuid::Uuid;
 
-// mod entry;
+mod goal;
 mod meal;
 mod user;
+
+#[derive(Clone, Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct Signup {
+    pub email: String,
+    pub password_hash: String,
+    pub name: String,
+}
 
 pub enum UserRef {
     User(User),
@@ -55,4 +63,13 @@ pub struct Meal {
     pub name: String,
     pub calories: i32,
     pub created_at: DateTime<Utc>,
+}
+
+#[derive(FromRow, PartialEq, Eq, Debug)]
+pub struct Session<D> {
+    pub id: Uuid,
+    #[sqlx(json)]
+    pub data: D,
+    pub created_at: DateTime<Utc>,
+    pub expires_at: DateTime<Utc>,
 }
