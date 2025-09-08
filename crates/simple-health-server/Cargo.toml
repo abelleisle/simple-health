@@ -6,8 +6,10 @@ edition = "2024"
 [dependencies]
 async-trait = "0.1"
 axum = "0.8.4"
+axum-extra = { version = "0.10.1", features = ["cookie"] }
 chrono = { version = "0.4.41", features = ["serde"] }
 inventory = "0.3.21"
+jwt-simple = "0.12.12"
 log = { version = "0.4.28", features = ["max_level_debug", "release_max_level_warn"] }
 reqwest = "0.12.23"
 serde = { version = "1.0", features = ["derive"] }

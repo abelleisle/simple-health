@@ -1,4 +1,5 @@
 mod api;
+mod auth;
 mod core;
 mod db;
 mod session;

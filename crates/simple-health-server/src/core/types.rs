@@ -16,6 +16,12 @@ pub struct Signup {
     pub name: String,
 }
 
+#[derive(Debug)]
+struct Signin {
+    username: String,
+    password: String,
+}
+
 pub enum UserRef {
     User(User),
     ID(Uuid),

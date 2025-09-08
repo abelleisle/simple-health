@@ -26,6 +26,9 @@ in {
     tailwindcss_4
     watchman
 
+    cmake
+    clang
+
     at-spi2-atk
     atkmm
     cairo
@@ -62,6 +65,7 @@ in {
 
   env = {
     DATABASE_URL = "postgres://gym:membership@localhost/health";
+    LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
   };
 
   # env.LD_LIBRARY_PATH = libPath;
@@ -129,8 +133,7 @@ in {
   # '';
   #
   # enterShell = ''
-  #   hello
-  #   git --version
+  # export LIBCLANG_PATH="${pkgs.llvmPackages.libclang}/lib"
   # '';
 
   # https://devenv.sh/tasks/
@@ -152,6 +155,9 @@ in {
       packageOverrides = with pkgs; {
         inherit cargo clippy;
       };
+      extraPackages = with pkgs; [
+        openssl
+      ];
       settings.allFeatures = true;
     };
     treefmt = {
