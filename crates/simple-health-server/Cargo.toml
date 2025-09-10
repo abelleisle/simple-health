@@ -9,9 +9,10 @@ axum = "0.8.4"
 axum-extra = { version = "0.10.1", features = ["cookie"] }
 chrono = { version = "0.4.41", features = ["serde"] }
 inventory = "0.3.21"
+jsonwebtoken = "9.3.1"
 jwt-simple = "0.12.12"
 log = { version = "0.4.28", features = ["max_level_debug", "release_max_level_warn"] }
-reqwest = "0.12.23"
+reqwest = { version = "0.12.23", default-features = false, features = ["rustls-tls", "json"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0.143"
 sqlx = { version = "0.8.6", features = ["postgres", "runtime-tokio", "time", "uuid", "chrono", "sqlite", "any"] }
