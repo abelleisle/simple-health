@@ -16,10 +16,11 @@ pub struct Signup {
     pub name: String,
 }
 
-#[derive(Debug)]
-struct Signin {
-    username: String,
-    password: String,
+#[derive(Debug, Clone, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct Signin {
+    pub username: String,
+    pub password: String,
 }
 
 pub enum UserRef {

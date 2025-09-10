@@ -1,9 +1,10 @@
+use crate::auth;
 use crate::db;
 
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::core::types::{Signup, User};
+use crate::core::types::{Signin, Signup, User};
 
 impl User {
     pub async fn new(pool: &db::DBPool, signup: &Signup) -> Result<User, sqlx::Error> {
@@ -118,6 +119,33 @@ impl User {
             .await?;
 
         Ok(result.rows_affected() > 0)
+    }
+
+    pub async fn validate_and_fetch(
+        pool: &db::DBPool,
+        signin: &Signin,
+    ) -> Result<Option<User>, sqlx::Error> {
+        // Fetch user with password hash for validation
+        let user_with_password = sqlx::query!(
+            "SELECT id, email, name, password_hash FROM users WHERE email = $1",
+            signin.username
+        )
+        .fetch_optional(pool)
+        .await?;
+        // let user_with_password = User::get(pool, None, Some(&signin.username)).await?;
+
+        if let Some(user_data) = user_with_password {
+            // Verify password (you'll need a password hashing crate like bcrypt or argon2)
+            if auth::verify_password(&signin.password, &user_data.password_hash) {
+                return Ok(Some(User {
+                    id: user_data.id,
+                    email: user_data.email,
+                    name: user_data.name,
+                }));
+            }
+        }
+
+        Ok(None)
     }
 }
 
