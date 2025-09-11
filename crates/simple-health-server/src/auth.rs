@@ -1,4 +1,4 @@
-mod authenticate;
+pub mod authenticate;
 mod cookie;
 mod jwt;
 pub mod middleware;

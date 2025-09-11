@@ -5,7 +5,10 @@ mod db;
 mod session;
 mod utils;
 
-use axum::Router;
+use axum::{
+    Router,
+    routing::{get, post},
+};
 use tower_http::{cors::CorsLayer, services::ServeDir};
 
 use core::types::{Signup, User};
@@ -65,6 +68,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 fn create_app(state: ServerState) -> Router {
     let mut app = Router::new()
         .nest("/api/v1", api::get_routes())
+        // .route("/login", post(auth::authenticate::login))
         .with_state(state)
         .layer(CorsLayer::permissive());
 

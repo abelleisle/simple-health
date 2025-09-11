@@ -75,18 +75,23 @@
       </div>
     </div>
 
-    <script>
+    <script type="module">
+      import { handleLogin } from "/login/login.js";
+
       document
         .getElementById("loginForm")
-        .addEventListener("submit", function (e) {
+        .addEventListener("submit", async function (e) {
           e.preventDefault();
           const formData = new FormData(this);
           const username = formData.get("username");
           const password = formData.get("password");
 
           if (username && password) {
-            // Redirect to main app on successful login
-            window.location.href = "/";
+            try {
+              await handleLogin(username.toString(), password.toString());
+            } catch (error) {
+              alert(error.message);
+            }
           }
         });
     </script>

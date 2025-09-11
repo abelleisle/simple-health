@@ -1,3 +1,4 @@
+use crate::core::types::User;
 use crate::db::DBPool;
 use jwt_simple::reexports::rand;
 use serde::de::DeserializeOwned;
@@ -97,5 +98,17 @@ impl RefreshToken {
 
     pub fn is_expired(&self) -> bool {
         self.expires_at < Utc::now()
+    }
+
+    pub async fn get_user_from_token(
+        pool: &DBPool,
+        token: &str,
+    ) -> Result<Option<User>, sqlx::Error> {
+        let refresh_token = Self::get_by_token(pool, token).await?;
+
+        match refresh_token {
+            Some(rt) => User::get(pool, Some(rt.user_id), None).await,
+            None => Ok(None),
+        }
     }
 }

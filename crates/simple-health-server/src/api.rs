@@ -1,5 +1,10 @@
 use crate::ServerState;
-use axum::{Router, extract::State, response::Json, routing::get};
+use axum::{
+    Router,
+    extract::State,
+    response::Json,
+    routing::{get, post},
+};
 
 pub fn get_routes() -> Router<ServerState> {
     Router::new().route("/health", get(health_check))
