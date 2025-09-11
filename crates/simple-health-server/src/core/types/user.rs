@@ -1,7 +1,7 @@
 use crate::auth;
 use crate::db;
 
-use sqlx::PgPool;
+use sqlx::{PgPool, Row};
 use uuid::Uuid;
 
 use crate::core::types::{Signin, Signup, User};
@@ -121,46 +121,42 @@ impl User {
         Ok(result.rows_affected() > 0)
     }
 
+    pub async fn get_with_password(
+        pool: &db::DBPool,
+        email: &str,
+    ) -> Result<Option<(User, String)>, sqlx::Error> {
+        let result =
+            sqlx::query("SELECT id, email, name, password_hash FROM users WHERE email = $1")
+                .bind(email)
+                .fetch_optional(pool)
+                .await?;
+
+        if let Some(row) = result {
+            let user = User {
+                id: row.get("id"),
+                email: row.get("email"),
+                name: row.get("name"),
+            };
+            let password_hash: String = row.get("password_hash");
+            Ok(Some((user, password_hash)))
+        } else {
+            Ok(None)
+        }
+    }
+
     pub async fn validate_and_fetch(
         pool: &db::DBPool,
         signin: &Signin,
     ) -> Result<Option<User>, sqlx::Error> {
         // Fetch user with password hash for validation
-        let user_with_password = sqlx::query!(
-            "SELECT id, email, name, password_hash FROM users WHERE email = $1",
-            signin.username
-        )
-        .fetch_optional(pool)
-        .await?;
-        // let user_with_password = User::get(pool, None, Some(&signin.username)).await?;
-
-        if let Some(user_data) = user_with_password {
+        if let Some((user, password_hash)) = User::get_with_password(pool, &signin.username).await?
+        {
             // Verify password (you'll need a password hashing crate like bcrypt or argon2)
-            if auth::verify_password(&signin.password, &user_data.password_hash) {
-                return Ok(Some(User {
-                    id: user_data.id,
-                    email: user_data.email,
-                    name: user_data.name,
-                }));
+            if auth::verify_password(&signin.password, &password_hash) {
+                return Ok(Some(user));
             }
         }
 
         Ok(None)
     }
 }
-
-// impl TableRequired for User {
-//     const CREATE_TABLE_SQL: &'static str = "CREATE TABLE IF NOT EXISTS users (
-//         id UUID PRIMARY KEY,
-//         email VARCHAR(255) NOT NULL UNIQUE,
-//         password_hash VARCHAR(255) NOT NULL,
-//         name VARCHAR(255) NOT NULL,
-//         calorie_goal INTEGER NOT NULL,
-//         created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-//         updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-//     )";
-//
-//     const TABLE_NAME: &'static str = "users";
-// }
-//
-// register_table!(User);

@@ -71,12 +71,3 @@ pub struct Meal {
     pub calories: i32,
     pub created_at: DateTime<Utc>,
 }
-
-#[derive(FromRow, PartialEq, Eq, Debug)]
-pub struct Session<D> {
-    pub id: Uuid,
-    #[sqlx(json)]
-    pub data: D,
-    pub created_at: DateTime<Utc>,
-    pub expires_at: DateTime<Utc>,
-}
