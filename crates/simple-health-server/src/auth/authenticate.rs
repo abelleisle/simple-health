@@ -15,7 +15,7 @@ use crate::auth::{cookie::default_cookie, jwt, jwt::Claims};
 use crate::core::types::{Signin, User};
 use crate::session::RefreshToken;
 
-const JWT_SIGNING_KEY: &str = "supersecretsigningkey";
+pub const JWT_SIGNING_KEY: &str = "supersecretsigningkey";
 
 pub async fn login(
     jar: CookieJar,

@@ -1,17 +1,25 @@
 mod api;
 mod auth;
+mod base;
 mod core;
 mod db;
 mod session;
 mod utils;
 
 use axum::{
-    Router,
+    Router, middleware,
     routing::{get, post},
 };
 use tower_http::{cors::CorsLayer, services::ServeDir};
+use uuid::Uuid;
 
 use core::types::{Signup, User};
+
+#[derive(Clone)]
+pub struct UserContext {
+    user_id: Option<Uuid>,
+    is_admin: bool,
+}
 
 #[derive(Clone)]
 pub struct ServerState {
@@ -69,8 +77,9 @@ fn create_app(state: ServerState) -> Router {
     let mut app = Router::new()
         .nest("/api/v1", api::get_routes())
         // .route("/login", post(auth::authenticate::login))
-        .with_state(state)
-        .layer(CorsLayer::permissive());
+        .with_state(state.clone())
+        .layer(middleware::from_fn_with_state(state.clone(), base::base))
+        .layer(CorsLayer::very_permissive());
 
     if utils::dev::is_built_version() {
         if let Some(static_dir) = utils::get_static_dir() {
