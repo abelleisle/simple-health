@@ -11,10 +11,8 @@
     "watch-ts": "tsc --watch & tailwindcss --watch --output static/css/styles.css"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.21",
     "tailwindcss": "^4.1.12",
-    "typescript": "~5.8.3",
-    "vite": "^7.1.2"
+    "typescript": "~5.8.3"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.12"
