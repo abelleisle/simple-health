@@ -1,6 +1,6 @@
 use axum::{
     Form,
-    extract::{Query, State},
+    extract::{Extension, Query, State},
     http::{
         StatusCode,
         header::{HeaderMap, SET_COOKIE},
@@ -10,10 +10,10 @@ use axum::{
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use serde::Deserialize;
 
-use crate::ServerState;
 use crate::auth::{cookie::default_cookie, jwt, jwt::Claims};
 use crate::core::types::{Signin, User};
 use crate::session::RefreshToken;
+use crate::{ServerState, UserContext};
 
 pub const JWT_SIGNING_KEY: &str = "supersecretsigningkey";
 
@@ -21,6 +21,7 @@ pub const JWT_SIGNING_KEY: &str = "supersecretsigningkey";
 pub async fn login(
     State(app): State<ServerState>,
     jar: CookieJar,
+    Extension(mut ctx): Extension<UserContext>,
     Form(signin): Form<Signin>,
 ) -> impl IntoResponse {
     // dummy function to get a user
@@ -31,7 +32,10 @@ pub async fn login(
     let user = match User::validate_and_fetch(app.db.get_pool(), &signin).await {
         Ok(user) => match user {
             Some(user) => user,
-            None => return Redirect::to("/signup").into_response(),
+            None => {
+                ctx.error = Some("Invalid credentials".to_string());
+                return Redirect::to("/login").into_response();
+            }
         },
         Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, "Uh oh :(").into_response(),
     };

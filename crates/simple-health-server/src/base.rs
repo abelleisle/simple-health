@@ -28,6 +28,7 @@ pub async fn base(
     let mut context = UserContext {
         user_id: None,
         is_admin: false,
+        error: None,
     };
 
     // JWT takes precedence if present

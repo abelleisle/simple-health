@@ -2,6 +2,7 @@ use axum::{
     Router,
     extract::{Extension, State},
     http::StatusCode,
+    middleware,
     response::{Html, Response},
     routing::get,
 };
@@ -10,15 +11,17 @@ use std::collections::HashMap;
 use tera::{Context, Tera};
 use tower_http::services::ServeDir;
 
-use crate::ServerState;
+use crate::auth::required_auth;
+use crate::{ServerState, UserContext};
 
-pub fn get_routes() -> Router<ServerState> {
+pub fn get_routes(state: ServerState) -> Router<ServerState> {
     let mut tera = Tera::new("frontend/web/templates/**/*").expect("Failed to initialize Tera");
 
     tera.autoescape_on(vec!["html", "htm"]);
 
     Router::new()
         .route("/", get(dashboard))
+        .layer(middleware::from_fn_with_state(state, required_auth))
         .route("/login", get(login))
         .nest_service("/static/css", ServeDir::new("frontend/web/static/css"))
         .nest_service("/static/js", ServeDir::new("frontend/web/static/js"))
@@ -97,8 +100,14 @@ async fn dashboard(
 async fn login(
     State(_state): State<ServerState>,
     Extension(tera): Extension<Tera>,
+    Extension(ctx): Extension<UserContext>,
 ) -> Result<Html<String>, StatusCode> {
-    let context = Context::new();
+    let mut context = Context::new();
+
+    if let Some(error) = ctx.error {
+        log::info!("Error at login: {}", error);
+        context.insert("error", &error);
+    }
 
     // You can add error handling and username persistence here
     // context.insert("error", "Invalid credentials");

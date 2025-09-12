@@ -21,6 +21,7 @@ use core::types::{Signup, User};
 pub struct UserContext {
     user_id: Option<Uuid>,
     is_admin: bool,
+    error: Option<String>,
 }
 
 #[derive(Clone)]
@@ -77,7 +78,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
 fn create_app(state: ServerState) -> Router {
     let mut app = Router::new()
-        .merge(serve::get_routes())
+        .merge(serve::get_routes(state.clone()))
         .nest("/api/v1", api::get_routes())
         .with_state(state.clone())
         .layer(
