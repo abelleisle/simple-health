@@ -7,7 +7,7 @@ use axum::{
     },
     response::{IntoResponse, Redirect, Response},
 };
-use axum_extra::extract::{CookieJar, cookie::Cookie};
+use axum_extra::extract::cookie::{Cookie, CookieJar};
 use serde::Deserialize;
 
 use crate::ServerState;
@@ -17,9 +17,10 @@ use crate::session::RefreshToken;
 
 pub const JWT_SIGNING_KEY: &str = "supersecretsigningkey";
 
+#[axum::debug_handler]
 pub async fn login(
-    jar: CookieJar,
     State(app): State<ServerState>,
+    jar: CookieJar,
     Form(signin): Form<Signin>,
 ) -> impl IntoResponse {
     // dummy function to get a user
@@ -37,7 +38,8 @@ pub async fn login(
 
     let refresh_token = match RefreshToken::create(app.db.get_pool(), user.id).await {
         Ok(token) => token,
-        Err(_) => {
+        Err(e) => {
+            log::error!("Refresh token creation error: {}", e);
             return (
                 StatusCode::INTERNAL_SERVER_ERROR,
                 "Somethign bad happened, try again later",

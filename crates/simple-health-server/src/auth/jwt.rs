@@ -3,7 +3,7 @@ use axum::{
     http::{StatusCode, request::Parts},
     response::Redirect,
 };
-use axum_extra::extract::CookieJar;
+use axum_extra::extract::cookie::CookieJar;
 use chrono::{DateTime, Duration, TimeDelta, Utc};
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};

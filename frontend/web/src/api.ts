@@ -46,6 +46,28 @@ class ApiManager {
     });
   }
 
+  async postForm(
+    endpoint: string,
+    data: Record<string, string>,
+  ): Promise<void> {
+    const formData = new URLSearchParams(data);
+
+    const url = `${this.baseUrl}${endpoint}`;
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `API request failed: ${response.status} ${response.statusText}`,
+      );
+    }
+  }
+
   async put<T>(endpoint: string, data?: unknown): Promise<T> {
     return this.request<T>(endpoint, {
       method: "PUT",

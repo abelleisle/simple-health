@@ -10,6 +10,7 @@ use axum::{
     Router, middleware,
     routing::{get, post},
 };
+use tower_http::cors::Any;
 use tower_http::{cors::CorsLayer, services::ServeDir};
 use uuid::Uuid;
 
@@ -73,13 +74,22 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     Ok(())
 }
 
+async fn simple_login() -> &'static str {
+    "login endpoint working"
+}
+
 fn create_app(state: ServerState) -> Router {
     let mut app = Router::new()
         .nest("/api/v1", api::get_routes())
-        // .route("/login", post(auth::authenticate::login))
+        .route("/refresh_token", get(auth::authenticate::refresh_token))
         .with_state(state.clone())
-        .layer(middleware::from_fn_with_state(state.clone(), base::base))
-        .layer(CorsLayer::very_permissive());
+        .layer(
+            CorsLayer::new()
+                .allow_origin(Any)
+                .allow_methods(Any)
+                .allow_headers(Any),
+        )
+        .layer(middleware::from_fn_with_state(state.clone(), base::base));
 
     if utils::dev::is_built_version() {
         if let Some(static_dir) = utils::get_static_dir() {

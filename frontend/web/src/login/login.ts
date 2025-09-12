@@ -5,13 +5,8 @@ export async function handleLogin(
   username: string,
   password: string,
 ): Promise<void> {
-  const signinData: Signin = {
-    username,
-    password,
-  };
-
   try {
-    await api.post("/login", signinData);
+    await api.postForm("/login", { username, password });
     window.location.href = "/";
   } catch (error) {
     console.error("Login failed:", error);

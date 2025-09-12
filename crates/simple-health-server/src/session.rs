@@ -23,9 +23,8 @@ impl RefreshToken {
         use rand::RngCore;
 
         // Generate cryptographically secure random token
-        let mut rng = rand::thread_rng();
         let mut bytes = vec![0u8; 32];
-        rng.fill_bytes(&mut bytes);
+        rand::thread_rng().fill_bytes(&mut bytes);
         let token = URL_SAFE_NO_PAD.encode(&bytes);
 
         // Check if user already has a valid refresh token
@@ -38,12 +37,14 @@ impl RefreshToken {
         .await?;
 
         if let Some(existing_token) = existing {
+            log::debug!("Returning existing token for user {}", user_id);
             return Ok(existing_token);
         }
 
+        log::debug!("Creating new token for user {}", user_id);
         // Insert new refresh token
         sqlx::query_as::<_, RefreshToken>(
-            "INSERT INTO refresh_keys (user_id, token) VALUES ($1, $2)
+            "INSERT INTO refresh_keys (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '30 days')
              RETURNING user_id, token, expires_at, created_at",
         )
         .bind(user_id)
