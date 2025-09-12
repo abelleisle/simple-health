@@ -3,6 +3,7 @@ mod auth;
 mod base;
 mod core;
 mod db;
+mod serve;
 mod session;
 mod utils;
 
@@ -74,12 +75,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     Ok(())
 }
 
-async fn simple_login() -> &'static str {
-    "login endpoint working"
-}
-
 fn create_app(state: ServerState) -> Router {
     let mut app = Router::new()
+        .merge(serve::get_routes())
         .nest("/api/v1", api::get_routes())
         .route("/refresh_token", get(auth::authenticate::refresh_token))
         .with_state(state.clone())
@@ -91,15 +89,15 @@ fn create_app(state: ServerState) -> Router {
         )
         .layer(middleware::from_fn_with_state(state.clone(), base::base));
 
-    if utils::dev::is_built_version() {
-        if let Some(static_dir) = utils::get_static_dir() {
-            app = app.fallback_service(ServeDir::new(static_dir));
-        } else {
-            panic!("Unable to find required static content directory!");
-        }
-    } else {
-        app = app.fallback(utils::dev::proxy_to_frontend)
-    }
+    // if utils::dev::is_built_version() {
+    //     if let Some(static_dir) = utils::get_static_dir() {
+    //         app = app.fallback_service(ServeDir::new(static_dir));
+    //     } else {
+    //         panic!("Unable to find required static content directory!");
+    //     }
+    // } else {
+    //     app = app.fallback(utils::dev::proxy_to_frontend)
+    // }
 
     app
 }
