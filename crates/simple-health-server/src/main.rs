@@ -79,7 +79,6 @@ fn create_app(state: ServerState) -> Router {
     let mut app = Router::new()
         .merge(serve::get_routes())
         .nest("/api/v1", api::get_routes())
-        .route("/refresh_token", get(auth::authenticate::refresh_token))
         .with_state(state.clone())
         .layer(
             CorsLayer::new()

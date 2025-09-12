@@ -1,5 +1,5 @@
 use crate::ServerState;
-use crate::auth::authenticate::login;
+use crate::auth::authenticate::{login, refresh_token};
 use axum::{
     Router,
     extract::State,
@@ -11,6 +11,7 @@ pub fn get_routes() -> Router<ServerState> {
     Router::new()
         .route("/health", get(health_check))
         .route("/login", post(login))
+        .route("/refresh_token", get(refresh_token))
 }
 
 async fn health_check(State(state): State<ServerState>) -> Json<serde_json::Value> {

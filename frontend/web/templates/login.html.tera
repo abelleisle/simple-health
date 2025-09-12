@@ -20,7 +20,7 @@
         </div>
         {% endif %}
 
-        <form class="mt-8 space-y-6" id="loginForm" action="/login" method="post">
+        <form class="mt-8 space-y-6" id="loginForm" action="/api/v1/login" method="post">
             <div class="space-y-4">
                 <div>
                     <label for="username" class="block text-sm font-medium text-gray-700">

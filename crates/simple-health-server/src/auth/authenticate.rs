@@ -51,12 +51,12 @@ pub async fn login(
     let claims = Claims::with(&user);
     match jwt::generate_jwt(JWT_SIGNING_KEY, claims) {
         Ok(token) => (
-            [("hx-redirect", "/")],
             jar.add(default_cookie("jwt", token, 1)).add(default_cookie(
                 "refresh",
                 refresh_token.token,
                 30 * 24,
             )),
+            Redirect::to("/"),
         )
             .into_response(),
         Err(_) => {

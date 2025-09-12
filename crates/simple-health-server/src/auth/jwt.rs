@@ -70,7 +70,7 @@ where
         // by redirecting user to /refresh_token endpoint
         if jar.get("refresh").is_some() {
             return Err(Redirect::to(
-                format!("/refresh_token?next={}", req.uri).as_str(),
+                format!("/api/v1/refresh_token?next={}", req.uri).as_str(),
             ));
         }
 
