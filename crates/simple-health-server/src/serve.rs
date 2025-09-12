@@ -1,18 +1,23 @@
 use axum::{
     Router,
-    extract::{Extension, State},
+    extract::{Extension, Query, State},
     http::StatusCode,
     middleware,
-    response::{Html, Response},
-    routing::get,
+    response::{Html, IntoResponse, Redirect},
+    routing::{get, post},
 };
-use chrono::Local;
+use serde::Deserialize;
 use std::collections::HashMap;
 use tera::{Context, Tera};
 use tower_http::services::ServeDir;
 
-use crate::auth::required_auth;
+use crate::auth::{authenticate::signout, required_auth};
 use crate::{ServerState, UserContext};
+
+#[derive(Deserialize)]
+struct LoginQuery {
+    error: Option<String>,
+}
 
 pub fn get_routes(state: ServerState) -> Router<ServerState> {
     let mut tera = Tera::new("frontend/web/templates/**/*").expect("Failed to initialize Tera");
@@ -23,6 +28,7 @@ pub fn get_routes(state: ServerState) -> Router<ServerState> {
         .route("/", get(dashboard))
         .layer(middleware::from_fn_with_state(state, required_auth))
         .route("/login", get(login))
+        .route("/signout", post(signout))
         .nest_service("/static/css", ServeDir::new("frontend/web/static/css"))
         .nest_service("/static/js", ServeDir::new("frontend/web/static/js"))
         .nest_service(
@@ -99,13 +105,17 @@ async fn dashboard(
 
 async fn login(
     State(_state): State<ServerState>,
+    Query(query): Query<LoginQuery>,
     Extension(tera): Extension<Tera>,
     Extension(ctx): Extension<UserContext>,
-) -> Result<Html<String>, StatusCode> {
+) -> impl IntoResponse {
     let mut context = Context::new();
 
-    if let Some(error) = ctx.error {
-        log::info!("Error at login: {}", error);
+    if ctx.user_id.is_some() {
+        return Redirect::to("/").into_response();
+    }
+
+    if let Some(error) = query.error {
         context.insert("error", &error);
     }
 
@@ -116,7 +126,7 @@ async fn login(
     let rendered = tera.render("login.html.tera", &context).map_err(|e| {
         log::error!("Error rendering login: {}", e);
         StatusCode::INTERNAL_SERVER_ERROR
-    })?;
+    });
 
-    Ok(Html(rendered))
+    Html(rendered).into_response()
 }

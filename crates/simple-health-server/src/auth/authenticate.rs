@@ -21,20 +21,20 @@ pub const JWT_SIGNING_KEY: &str = "supersecretsigningkey";
 pub async fn login(
     State(app): State<ServerState>,
     jar: CookieJar,
-    Extension(mut ctx): Extension<UserContext>,
+    Extension(_ctx): Extension<UserContext>,
     Form(signin): Form<Signin>,
 ) -> impl IntoResponse {
-    // dummy function to get a user
-    // let user = match db::user::get(&app.pg_pool, &username, &password).await {
-    //     None => return Redirect::to("/signup").into_response()
-    //     Some(user) => user
-    // };
+    // TODO check if auth-bypass is desired
+    // if ctx.user_id.is_some() {
+    //     return Redirect::to("/").into_response();
+    // }
+
     let user = match User::validate_and_fetch(app.db.get_pool(), &signin).await {
         Ok(user) => match user {
             Some(user) => user,
             None => {
-                ctx.error = Some("Invalid credentials".to_string());
-                return Redirect::to("/login").into_response();
+                log::warn!("User {} failed to login", signin.username);
+                return Redirect::to("/login?error=Invalid+credentials").into_response();
             }
         },
         Err(_) => return (StatusCode::INTERNAL_SERVER_ERROR, "Uh oh :(").into_response(),
@@ -107,4 +107,22 @@ pub async fn refresh_token(
             .into_response(),
         Err(_) => (jar.remove(Cookie::from("refresh")), Redirect::to("/login")).into_response(),
     }
+}
+
+pub async fn signout(State(app): State<ServerState>, jar: CookieJar) -> impl IntoResponse {
+    // Optionally clean up refresh token from database
+    if let Some(refresh_token) = jar.get("refresh") {
+        if let Err(e) =
+            RefreshToken::delete_by_token(app.db.get_pool(), refresh_token.value()).await
+        {
+            log::warn!("Failed to delete refresh token from database: {}", e);
+        }
+    }
+
+    // Remove both JWT and refresh cookies
+    let jar = jar
+        .remove(Cookie::from("jwt"))
+        .remove(Cookie::from("refresh"));
+
+    (jar, Redirect::to("/login")).into_response()
 }
