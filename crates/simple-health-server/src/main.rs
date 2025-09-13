@@ -77,9 +77,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 }
 
 fn create_app(state: ServerState) -> Router {
-    let mut app = Router::new()
+    let app = Router::new()
         .merge(serve::get_routes(state.clone()))
-        .nest("/api/v1", api::get_routes())
+        .nest("/api/v1", api::get_routes(state.clone()))
         .with_state(state.clone())
         .layer(
             CorsLayer::new()

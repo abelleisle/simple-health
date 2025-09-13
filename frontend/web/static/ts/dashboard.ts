@@ -4,6 +4,27 @@
 function openModal(): void {
   const modal = document.getElementById("food-modal");
   modal?.classList.remove("hidden");
+
+  // Set current date and time as defaults
+  const now = new Date();
+
+  // Set current date
+  const dateInput = document.getElementById(
+    "food-date",
+  ) as HTMLInputElement | null;
+  if (dateInput) {
+    dateInput.value = now.toISOString().split("T")[0]; // YYYY-MM-DD format
+  }
+
+  // Set current time
+  const timeInput = document.getElementById(
+    "food-time",
+  ) as HTMLInputElement | null;
+  if (timeInput) {
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    timeInput.value = `${hours}:${minutes}`; // HH:MM format
+  }
 }
 
 function closeModal(): void {
