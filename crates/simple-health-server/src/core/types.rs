@@ -1,4 +1,4 @@
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Duration, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use ts_rs::TS;
@@ -79,11 +79,11 @@ pub struct Meal {
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub enum ActivityType {
-    Breakfast,
-    Lunch,
-    Dinner,
-    Snack,
-    Coffee,
+    Walk,
+    Run,
+    Hike,
+    Bike,
+    Ski,
 }
 
 #[derive(FromRow, Clone, Debug, Serialize, Deserialize, TS)]
@@ -94,5 +94,6 @@ pub struct Activity {
     pub name: String,
     pub description: String,
     pub calories: i32,
+    pub duration: Option<Duration>,
     pub created_at: DateTime<Utc>,
 }

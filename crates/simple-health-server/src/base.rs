@@ -44,7 +44,7 @@ pub async fn base(
                         context.user = Some(user);
                     }
                     _ => {
-                        log::error!("Error fetching user {}", claims.user_id);
+                        log::error!("Error fetching user {}, removing cookies", claims.user_id);
                         jar = jar.remove("jwt").remove("refresh");
                     }
                 }

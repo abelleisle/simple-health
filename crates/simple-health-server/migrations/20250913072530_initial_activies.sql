@@ -4,6 +4,7 @@ CREATE TABLE activities (
     name VARCHAR(255),
     description VARCHAR(255),
     calories INTEGER NOT NULL,
+    duration INTERVAL,
     created_at timestamptz NOT NULL DEFAULT NOW(),
     updated_at timestamptz
 );
