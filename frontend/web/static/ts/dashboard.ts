@@ -1,5 +1,5 @@
 // Dashboard functionality - minimal TypeScript for dynamic interactions
-import type { Meal } from "./types";
+import type { Meal, MealType } from "./types";
 
 // Generate a random UUID v4
 function generateUUID(): string {
@@ -8,6 +8,36 @@ function generateUUID(): string {
     const v = c == "x" ? r : (r & 0x3) | 0x8;
     return v.toString(16);
   });
+}
+
+// Populate meal type dropdown
+function populateMealTypeDropdown(): void {
+  // TODO this is trash and shouldn't be hardcoded.
+  // Gotta find some way to extract the string literals from the MealType
+  // union to fill this array.
+  const mealTypes: MealType[] = [
+    "Breakfast",
+    "Lunch",
+    "Dinner",
+    "Snack",
+    "Coffee",
+  ];
+  const selectElement = document.getElementById(
+    "food-type",
+  ) as HTMLSelectElement;
+
+  if (selectElement) {
+    // Clear existing options except the first one
+    selectElement.innerHTML = '<option value="">Select meal type</option>';
+
+    // Add options for each meal type
+    mealTypes.forEach((type) => {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type;
+      selectElement.appendChild(option);
+    });
+  }
 }
 
 // Modal management
@@ -48,6 +78,9 @@ function closeModal(): void {
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", function (): void {
+  // Populate meal type dropdown
+  populateMealTypeDropdown();
+
   // Add Food button
   const addFoodBtn = document.getElementById("add-food-btn");
   if (addFoodBtn) {
@@ -98,8 +131,11 @@ document.addEventListener("DOMContentLoaded", function (): void {
       async function (e: Event): Promise<void> {
         e.preventDefault();
 
-        const nameInput = document.getElementById(
-          "food-name",
+        const typeSelect = document.getElementById(
+          "food-type",
+        ) as HTMLSelectElement;
+        const descriptionInput = document.getElementById(
+          "food-description",
         ) as HTMLInputElement;
         const caloriesInput = document.getElementById(
           "food-calories",
@@ -112,7 +148,8 @@ document.addEventListener("DOMContentLoaded", function (): void {
         ) as HTMLInputElement;
 
         if (
-          !nameInput.value ||
+          !typeSelect.value ||
+          !descriptionInput.value ||
           !caloriesInput.value ||
           !dateInput.value ||
           !timeInput.value
@@ -129,7 +166,8 @@ document.addEventListener("DOMContentLoaded", function (): void {
         const meal: Meal = {
           id: generateUUID(),
           user_id: generateUUID(), // You might want to get this from user session instead
-          name: nameInput.value,
+          name: typeSelect.value,
+          description: descriptionInput.value,
           calories: parseInt(caloriesInput.value, 10),
           created_at: created_at,
         };

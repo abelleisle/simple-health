@@ -3,12 +3,14 @@ use crate::auth::{
     cookie::default_cookie,
     jwt::{Claims, generate_jwt, validate_jwt},
 };
+use crate::core::types::User;
 use crate::session::RefreshToken;
 use crate::{ServerState, UserContext};
 use axum::middleware::Next;
 use axum::{
     Router,
     extract::State,
+    http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
 };
@@ -26,7 +28,7 @@ pub async fn base(
 
     // Default context for unauthenticated requests
     let mut context = UserContext {
-        user_id: None,
+        user: None,
         is_admin: false,
         error: None,
     };
@@ -35,8 +37,17 @@ pub async fn base(
     if let Some(jwt) = jwt {
         match validate_jwt::<Claims>(JWT_SIGNING_KEY, jwt.value()) {
             Ok(claims) => {
-                log::debug!("User ID from JWT {}", claims.user_id);
-                context.user_id = Some(claims.user_id);
+                log::trace!("User ID from JWT {}", claims.user_id);
+                let user = User::get(app.db.get_pool(), Some(claims.user_id), None).await;
+                match user {
+                    Ok(Some(user)) => {
+                        context.user = Some(user);
+                    }
+                    _ => {
+                        log::error!("Error fetching user {}", claims.user_id);
+                        jar = jar.remove("jwt").remove("refresh");
+                    }
+                }
             }
             Err(_) => {
                 // Clear potentially compromised cookies
@@ -52,13 +63,13 @@ pub async fn base(
             // if let Ok(Some(user)) = db::refresh_tokens::get_user(&app.pg_pool, refresh.value()).await {
             let claims = Claims::with(&user);
             if let Ok(jwt) = generate_jwt(JWT_SIGNING_KEY, claims) {
-                log::debug!("User ID from refresh {}", user.id);
-                context.user_id = Some(user.id);
                 jar = jar.add(default_cookie("jwt", jwt, 1));
             }
             // Note: JWT generation errors are intentionally swallowed here
             // to prevent refresh token from being invalidated due to
             // temporary JWT generation issues
+
+            context.user = Some(user);
         }
     }
 

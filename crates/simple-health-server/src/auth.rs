@@ -27,7 +27,7 @@ pub async fn required_auth(
     request: Request,
     next: Next,
 ) -> impl IntoResponse {
-    if context.user_id.is_none() {
+    if context.user.is_none() {
         return Redirect::to("/login").into_response();
     }
 

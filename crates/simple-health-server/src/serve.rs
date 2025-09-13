@@ -6,12 +6,14 @@ use axum::{
     response::{Html, IntoResponse, Redirect},
     routing::{get, post},
 };
+use chrono::{Duration, Utc};
 use serde::Deserialize;
 use std::collections::HashMap;
 use tera::{Context, Tera};
 use tower_http::services::ServeDir;
 
 use crate::auth::{authenticate::signout, required_auth};
+use crate::core::types::Meal;
 use crate::{ServerState, UserContext};
 
 #[derive(Deserialize)]
@@ -40,43 +42,89 @@ pub fn get_routes(state: ServerState) -> Router<ServerState> {
 
 async fn dashboard(
     State(state): State<ServerState>,
+    Extension(ctx): Extension<UserContext>,
     Extension(tera): Extension<Tera>,
 ) -> Result<Html<String>, StatusCode> {
     let mut context = Context::new();
 
+    let goal: i32 = 2000;
+
     // Add dummy user data
     let mut user = HashMap::new();
-    user.insert("name", "Test User");
-    user.insert("calorie_goal", "2000");
+    user.insert("name", ctx.user.as_ref().unwrap().name.to_string());
+    user.insert("calorie_goal", goal.to_string());
     context.insert("user", &user);
+
+    // let entries: Vec<HashMap<String, String>> = Vec::new();
+    let five_days_ago_midnight = (Utc::now() - Duration::days(5))
+        .date_naive()
+        .and_hms_opt(0, 0, 0)
+        .unwrap()
+        .and_utc();
+    let meals = Meal::fetch_between_dates(
+        ctx.user.unwrap().id,
+        five_days_ago_midnight,
+        None,
+        state.db.get_pool(),
+    )
+    .await
+    .map_err(|e| {
+        log::error!(
+            "Unable to fetch meals between {} and now: {}",
+            five_days_ago_midnight,
+            e
+        );
+        return StatusCode::INTERNAL_SERVER_ERROR;
+    })?;
+
+    let entries: Vec<_> = meals
+        .iter()
+        .map(|m| {
+            let mut map: HashMap<&str, String> = HashMap::new();
+            map.insert("name", m.description.clone());
+            map.insert("type", m.name.clone());
+            map.insert("time", m.created_at.to_string());
+            map.insert("calories", m.calories.to_string());
+
+            map
+        })
+        .collect();
+
+    log::debug!("Entries: {:?}", entries);
+
+    let total_cal: i32 = meals.iter().map(|m| m.calories).sum();
+    let reman_cal: i32 = goal - total_cal;
+    let percent: i32 = (100 * total_cal) / goal;
 
     // Add dummy stats using serde_json for proper serialization
     context.insert(
         "stats",
         &serde_json::json!({
-            "total_calories": 1247,
-            "remaining_calories": 753,
-            "progress_percentage": 62,
+            "total_calories": total_cal,
+            "remaining_calories": reman_cal,
+            "progress_percentage": percent,
             "meal_breakdown": {
-                "breakfast": 350,
-                "lunch": 480,
-                "dinner": 320,
-                "snack": 97
+                "breakfast": meals .iter() .filter(|m| m.name == "Breakfast") .map(|m| m.calories) .sum::<i32>(),
+                "lunch": meals .iter() .filter(|m| m.name == "Lunch") .map(|m| m.calories) .sum::<i32>(),
+                "dinner": meals .iter() .filter(|m| m.name == "Dinner") .map(|m| m.calories) .sum::<i32>(),
+                "snack": meals .iter() .filter(|m| m.name == "Snack") .map(|m| m.calories) .sum::<i32>(),
+                "coffee": meals .iter() .filter(|m| m.name == "Coffee") .map(|m| m.calories) .sum::<i32>(),
             },
-            "entries": [
-                {
-                    "name": "Oatmeal with banana",
-                    "type": "breakfast",
-                    "time": "8:30 AM",
-                    "calories": "350"
-                },
-                {
-                    "name": "Chicken salad",
-                    "type": "lunch",
-                    "time": "12:45 PM",
-                    "calories": "480"
-                }
-            ]
+            // "entries": []
+            "entries": entries,//[
+                // {
+                //     "name": "Oatmeal with banana",
+                //     "type": "breakfast",
+                //     "time": "8:30 AM",
+                //     "calories": "350"
+                // },
+                // {
+                //     "name": "Chicken salad",
+                //     "type": "lunch",
+                //     "time": "12:45 PM",
+                //     "calories": "480"
+                // }
+            // ]
         }),
     );
 
@@ -111,7 +159,7 @@ async fn login(
 ) -> impl IntoResponse {
     let mut context = Context::new();
 
-    if ctx.user_id.is_some() {
+    if ctx.user.is_some() {
         return Redirect::to("/").into_response();
     }
 

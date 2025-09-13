@@ -6,6 +6,25 @@ function generateUUID() {
     return v.toString(16);
   });
 }
+// Populate meal type dropdown
+function populateMealTypeDropdown() {
+  // TODO this is trash and shouldn't be hardcoded.
+  // Gotta find some way to extract the string literals from the MealType
+  // union to fill this array.
+  const mealTypes = ["Breakfast", "Lunch", "Dinner", "Snack", "Coffee"];
+  const selectElement = document.getElementById("food-type");
+  if (selectElement) {
+    // Clear existing options except the first one
+    selectElement.innerHTML = '<option value="">Select meal type</option>';
+    // Add options for each meal type
+    mealTypes.forEach((type) => {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type;
+      selectElement.appendChild(option);
+    });
+  }
+}
 // Modal management
 function openModal() {
   const modal = document.getElementById("food-modal");
@@ -34,6 +53,8 @@ function closeModal() {
 }
 // Event listeners
 document.addEventListener("DOMContentLoaded", function () {
+  // Populate meal type dropdown
+  populateMealTypeDropdown();
   // Add Food button
   const addFoodBtn = document.getElementById("add-food-btn");
   if (addFoodBtn) {
@@ -71,12 +92,14 @@ document.addEventListener("DOMContentLoaded", function () {
   if (foodForm) {
     foodForm.addEventListener("submit", async function (e) {
       e.preventDefault();
-      const nameInput = document.getElementById("food-name");
+      const typeSelect = document.getElementById("food-type");
+      const descriptionInput = document.getElementById("food-description");
       const caloriesInput = document.getElementById("food-calories");
       const dateInput = document.getElementById("food-date");
       const timeInput = document.getElementById("food-time");
       if (
-        !nameInput.value ||
+        !typeSelect.value ||
+        !descriptionInput.value ||
         !caloriesInput.value ||
         !dateInput.value ||
         !timeInput.value
@@ -91,7 +114,8 @@ document.addEventListener("DOMContentLoaded", function () {
       const meal = {
         id: generateUUID(),
         user_id: generateUUID(), // You might want to get this from user session instead
-        name: nameInput.value,
+        name: typeSelect.value,
+        description: descriptionInput.value,
         calories: parseInt(caloriesInput.value, 10),
         created_at: created_at,
       };

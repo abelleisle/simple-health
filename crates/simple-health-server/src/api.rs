@@ -39,7 +39,7 @@ pub async fn required_auth_api(
     request: Request,
     next: Next,
 ) -> impl IntoResponse {
-    if context.user_id.is_none() {
+    if context.user.is_none() {
         log::warn!("Unauthorized access to api!");
         return StatusCode::UNAUTHORIZED.into_response();
     }
@@ -52,11 +52,11 @@ pub async fn meal(
     Extension(ctx): Extension<UserContext>,
     Json(mut meal): Json<Meal>,
 ) -> impl IntoResponse {
-    if ctx.user_id.is_none() {
+    if ctx.user.is_none() {
         return StatusCode::INTERNAL_SERVER_ERROR;
     }
 
-    meal.user_id = ctx.user_id.unwrap();
+    meal.user_id = ctx.user.unwrap().id;
     log::info!("Meal: {:?}", meal);
 
     let _ = meal.insert(app.db.get_pool()).await.map_err(|e| {

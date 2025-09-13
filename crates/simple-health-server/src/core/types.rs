@@ -55,13 +55,15 @@ pub struct Goal {
     pub created_at: DateTime<Utc>,
 }
 
-// #[derive(sqlx::Type, Clone, Debug, Serialize, Deserialize, TS)]
-// #[sqlx(type_name = "user_role", rename_all = "lowercase")]
-// pub enum FoodType {
-//     Meal,
-//     Snack,
-//     Drink,
-// }
+#[derive(Clone, Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub enum MealType {
+    Breakfast,
+    Lunch,
+    Dinner,
+    Snack,
+    Coffee,
+}
 
 #[derive(FromRow, Clone, Debug, Serialize, Deserialize, TS)]
 #[ts(export)]
@@ -69,6 +71,7 @@ pub struct Meal {
     pub id: Uuid,
     pub user_id: Uuid,
     pub name: String,
+    pub description: String,
     pub calories: i32,
     pub created_at: DateTime<Utc>,
 }

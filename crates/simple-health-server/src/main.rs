@@ -19,7 +19,7 @@ use core::types::{Signup, User};
 
 #[derive(Clone)]
 pub struct UserContext {
-    user_id: Option<Uuid>,
+    user: Option<User>,
     is_admin: bool,
     error: Option<String>,
 }

@@ -4,6 +4,7 @@ export type Meal = {
   id: string;
   user_id: string;
   name: string;
+  description: string;
   calories: number;
   created_at: string;
 };
