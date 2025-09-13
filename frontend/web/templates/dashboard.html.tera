@@ -68,7 +68,7 @@
             <!-- Meal Breakdown -->
             <div class="bg-white p-6 rounded-lg shadow col-span-full">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Meal Breakdown</h2>
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
                     <div class="text-center p-4 bg-gray-50 rounded-lg">
                         <h3 class="font-medium text-gray-900 capitalize">Breakfast</h3>
                         <p class="text-2xl font-bold text-blue-600">{{ stats.meal_breakdown.breakfast }}</p>

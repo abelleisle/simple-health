@@ -75,3 +75,24 @@ pub struct Meal {
     pub calories: i32,
     pub created_at: DateTime<Utc>,
 }
+
+#[derive(Clone, Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub enum ActivityType {
+    Breakfast,
+    Lunch,
+    Dinner,
+    Snack,
+    Coffee,
+}
+
+#[derive(FromRow, Clone, Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct Activity {
+    pub id: Uuid,
+    pub user_id: Uuid,
+    pub name: String,
+    pub description: String,
+    pub calories: i32,
+    pub created_at: DateTime<Utc>,
+}

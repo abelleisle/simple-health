@@ -1,4 +1,4 @@
-CREATE TABLE meals (
+CREATE TABLE activities (
     id uuid PRIMARY KEY UNIQUE DEFAULT gen_random_uuid(),
     user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name VARCHAR(255),
@@ -8,4 +8,4 @@ CREATE TABLE meals (
     updated_at timestamptz
 );
 
-select trigger_updated_at('meals');
+select trigger_updated_at('activities');
