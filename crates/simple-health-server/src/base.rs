@@ -35,6 +35,7 @@ pub async fn base(
     if let Some(jwt) = jwt {
         match validate_jwt::<Claims>(JWT_SIGNING_KEY, jwt.value()) {
             Ok(claims) => {
+                log::debug!("User ID from JWT {}", claims.user_id);
                 context.user_id = Some(claims.user_id);
             }
             Err(_) => {
@@ -51,6 +52,7 @@ pub async fn base(
             // if let Ok(Some(user)) = db::refresh_tokens::get_user(&app.pg_pool, refresh.value()).await {
             let claims = Claims::with(&user);
             if let Ok(jwt) = generate_jwt(JWT_SIGNING_KEY, claims) {
+                log::debug!("User ID from refresh {}", user.id);
                 context.user_id = Some(user.id);
                 jar = jar.add(default_cookie("jwt", jwt, 1));
             }

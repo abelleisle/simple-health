@@ -2,6 +2,7 @@ use crate::auth::{
     authenticate::{login, refresh_token},
     required_auth,
 };
+use crate::core::types::Meal;
 use crate::{ServerState, UserContext};
 use axum::{
     Extension, Router,
@@ -15,8 +16,9 @@ use axum::{
 
 pub fn get_routes(state: ServerState) -> Router<ServerState> {
     Router::new()
-        .route("/health", get(health_check))
+        .route("/meal", post(meal))
         .layer(middleware::from_fn_with_state(state, required_auth_api))
+        .route("/health", get(health_check))
         .route("/login", post(login))
         .route("/refresh_token", get(refresh_token))
 }
@@ -43,4 +45,24 @@ pub async fn required_auth_api(
     }
 
     next.run(request).await
+}
+
+pub async fn meal(
+    State(app): State<ServerState>,
+    Extension(ctx): Extension<UserContext>,
+    Json(mut meal): Json<Meal>,
+) -> impl IntoResponse {
+    if ctx.user_id.is_none() {
+        return StatusCode::INTERNAL_SERVER_ERROR;
+    }
+
+    meal.user_id = ctx.user_id.unwrap();
+    log::info!("Meal: {:?}", meal);
+
+    let _ = meal.insert(app.db.get_pool()).await.map_err(|e| {
+        log::error!("Unable to insert meal {:?} into db: {}", meal, e);
+        return StatusCode::INTERNAL_SERVER_ERROR;
+    });
+
+    StatusCode::OK
 }

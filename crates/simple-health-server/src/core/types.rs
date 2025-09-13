@@ -64,6 +64,7 @@ pub struct Goal {
 // }
 
 #[derive(FromRow, Clone, Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
 pub struct Meal {
     pub id: Uuid,
     pub user_id: Uuid,

@@ -1,4 +1,14 @@
 // Dashboard functionality - minimal TypeScript for dynamic interactions
+import type { Meal } from "./types";
+
+// Generate a random UUID v4
+function generateUUID(): string {
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
+    const r = (Math.random() * 16) | 0;
+    const v = c == "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 
 // Modal management
 function openModal(): void {
@@ -78,35 +88,71 @@ document.addEventListener("DOMContentLoaded", function (): void {
     );
   }
 
-  // Form submission (if you want to handle via AJAX instead of regular form submission)
+  // Form submission
   const foodForm = document.getElementById(
     "food-form",
   ) as HTMLFormElement | null;
   if (foodForm) {
     foodForm.addEventListener(
       "submit",
-      async function (_e: Event): Promise<void> {
-        // Let the form submit normally to the server
-        // If you want AJAX handling, uncomment below:
-        /*
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            try {
-                const response = await fetch('/add-food', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                if (response.ok) {
-                    window.location.reload();
-                } else {
-                    alert('Failed to add food entry');
-                }
-            } catch (error) {
-                alert('Error adding food entry');
-            }
-            */
+      async function (e: Event): Promise<void> {
+        e.preventDefault();
+
+        const nameInput = document.getElementById(
+          "food-name",
+        ) as HTMLInputElement;
+        const caloriesInput = document.getElementById(
+          "food-calories",
+        ) as HTMLInputElement;
+        const dateInput = document.getElementById(
+          "food-date",
+        ) as HTMLInputElement;
+        const timeInput = document.getElementById(
+          "food-time",
+        ) as HTMLInputElement;
+
+        if (
+          !nameInput.value ||
+          !caloriesInput.value ||
+          !dateInput.value ||
+          !timeInput.value
+        ) {
+          alert("Please fill in all required fields");
+          return;
+        }
+
+        // Combine date and time into ISO string
+        const created_at = new Date(
+          `${dateInput.value}T${timeInput.value}`,
+        ).toISOString();
+
+        const meal: Meal = {
+          id: generateUUID(),
+          user_id: generateUUID(), // You might want to get this from user session instead
+          name: nameInput.value,
+          calories: parseInt(caloriesInput.value, 10),
+          created_at: created_at,
+        };
+
+        try {
+          const response = await fetch("/api/v1/meal", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(meal),
+          });
+
+          if (response.ok) {
+            closeModal();
+            window.location.reload();
+          } else {
+            alert("Failed to add meal");
+          }
+        } catch (error) {
+          console.error("Error adding meal:", error);
+          alert("Error adding meal");
+        }
       },
     );
   }
