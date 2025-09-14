@@ -1,9 +1,10 @@
-use chrono::{DateTime, Duration, Utc};
+use chrono::{DateTime, TimeDelta, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use ts_rs::TS;
 use uuid::Uuid;
 
+mod activity;
 mod goal;
 mod meal;
 mod user;
@@ -94,6 +95,6 @@ pub struct Activity {
     pub name: String,
     pub description: String,
     pub calories: i32,
-    pub duration: Option<Duration>,
+    pub duration_s: Option<i32>,
     pub created_at: DateTime<Utc>,
 }

@@ -6,6 +6,6 @@ export type Activity = {
   name: string;
   description: string;
   calories: number;
-  duration: string | null;
+  duration_s: number | null;
   created_at: string;
 };

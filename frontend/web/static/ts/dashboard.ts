@@ -1,5 +1,5 @@
 // Dashboard functionality - minimal TypeScript for dynamic interactions
-import type { Meal, MealType } from "./types";
+import type { Meal, MealType, Activity, ActivityType } from "./types";
 
 // Generate a random UUID v4
 function generateUUID(): string {
@@ -32,6 +32,25 @@ function populateMealTypeDropdown(): void {
 
     // Add options for each meal type
     mealTypes.forEach((type) => {
+      const option = document.createElement("option");
+      option.value = type;
+      option.textContent = type;
+      selectElement.appendChild(option);
+    });
+  }
+}
+
+// Populate activity type dropdown
+function populateActivityTypeDropdown(): void {
+  const activityTypes: ActivityType[] = ["Walk", "Run", "Hike", "Bike", "Ski"];
+  const selectElement = document.getElementById(
+    "activity-type",
+  ) as HTMLSelectElement;
+
+  if (selectElement) {
+    selectElement.innerHTML = '<option value="">Select activity type</option>';
+
+    activityTypes.forEach((type) => {
       const option = document.createElement("option");
       option.value = type;
       option.textContent = type;
@@ -76,15 +95,59 @@ function closeModal(): void {
   form?.reset();
 }
 
+function openActivityModal(): void {
+  const modal = document.getElementById("activity-modal");
+  modal?.classList.remove("hidden");
+
+  // Set current date and time as defaults
+  const now = new Date();
+
+  // Set current date
+  const dateInput = document.getElementById(
+    "activity-date",
+  ) as HTMLInputElement | null;
+  if (dateInput) {
+    dateInput.value = now.toISOString().split("T")[0]; // YYYY-MM-DD format
+  }
+
+  // Set current time
+  const timeInput = document.getElementById(
+    "activity-time",
+  ) as HTMLInputElement | null;
+  if (timeInput) {
+    const hours = now.getHours().toString().padStart(2, "0");
+    const minutes = now.getMinutes().toString().padStart(2, "0");
+    timeInput.value = `${hours}:${minutes}`; // HH:MM format
+  }
+}
+
+function closeActivityModal(): void {
+  const modal = document.getElementById("activity-modal");
+  modal?.classList.add("hidden");
+
+  // Reset form
+  const form = document.getElementById(
+    "activity-form",
+  ) as HTMLFormElement | null;
+  form?.reset();
+}
+
 // Event listeners
 document.addEventListener("DOMContentLoaded", function (): void {
-  // Populate meal type dropdown
+  // Populate dropdowns
   populateMealTypeDropdown();
+  populateActivityTypeDropdown();
 
   // Add Food button
   const addFoodBtn = document.getElementById("add-food-btn");
   if (addFoodBtn) {
     addFoodBtn.addEventListener("click", openModal);
+  }
+
+  // Add Activity button
+  const addActivityBtn = document.getElementById("add-activity-btn");
+  if (addActivityBtn) {
+    addActivityBtn.addEventListener("click", openActivityModal);
   }
 
   // Close modal button
@@ -99,12 +162,36 @@ document.addEventListener("DOMContentLoaded", function (): void {
     cancelBtn.addEventListener("click", closeModal);
   }
 
+  // Close activity modal button
+  const closeActivityModalBtn = document.getElementById(
+    "close-activity-modal-btn",
+  );
+  if (closeActivityModalBtn) {
+    closeActivityModalBtn.addEventListener("click", closeActivityModal);
+  }
+
+  // Cancel activity button
+  const cancelActivityBtn = document.getElementById("cancel-activity-btn");
+  if (cancelActivityBtn) {
+    cancelActivityBtn.addEventListener("click", closeActivityModal);
+  }
+
   // Close modal when clicking outside
   const modal = document.getElementById("food-modal");
   if (modal) {
     modal.addEventListener("click", (e: Event): void => {
       if (e.target === modal) {
         closeModal();
+      }
+    });
+  }
+
+  // Close activity modal when clicking outside
+  const activityModal = document.getElementById("activity-modal");
+  if (activityModal) {
+    activityModal.addEventListener("click", (e: Event): void => {
+      if (e.target === activityModal) {
+        closeActivityModal();
       }
     });
   }
@@ -190,6 +277,92 @@ document.addEventListener("DOMContentLoaded", function (): void {
         } catch (error) {
           console.error("Error adding meal:", error);
           alert("Error adding meal");
+        }
+      },
+    );
+  }
+
+  // Activity form submission
+  const activityForm = document.getElementById(
+    "activity-form",
+  ) as HTMLFormElement | null;
+  if (activityForm) {
+    activityForm.addEventListener(
+      "submit",
+      async function (e: Event): Promise<void> {
+        e.preventDefault();
+
+        const typeSelect = document.getElementById(
+          "activity-type",
+        ) as HTMLSelectElement;
+        const descriptionInput = document.getElementById(
+          "activity-description",
+        ) as HTMLInputElement;
+        const caloriesInput = document.getElementById(
+          "activity-calories",
+        ) as HTMLInputElement;
+        const durationInput = document.getElementById(
+          "activity-duration",
+        ) as HTMLInputElement;
+        const dateInput = document.getElementById(
+          "activity-date",
+        ) as HTMLInputElement;
+        const timeInput = document.getElementById(
+          "activity-time",
+        ) as HTMLInputElement;
+
+        if (
+          !typeSelect.value ||
+          !descriptionInput.value ||
+          !caloriesInput.value ||
+          !dateInput.value ||
+          !timeInput.value
+        ) {
+          alert("Please fill in all required fields");
+          return;
+        }
+
+        // Combine date and time into ISO string
+        const created_at = new Date(
+          `${dateInput.value}T${timeInput.value}`,
+        ).toISOString();
+
+        // Convert duration from HH:MM to Duration format (optional)
+        let duration = null;
+        if (durationInput.value) {
+          const [hours, minutes] = durationInput.value.split(":").map(Number);
+          // Convert to total seconds for now - we'll need to adjust based on backend Duration handling
+          duration = (hours * 60 + minutes) * 60;
+        }
+
+        const activity: Activity = {
+          id: generateUUID(),
+          user_id: generateUUID(), // You might want to get this from user session instead
+          name: typeSelect.value,
+          description: descriptionInput.value,
+          calories: parseInt(caloriesInput.value, 10),
+          duration_s: duration,
+          created_at: created_at,
+        };
+
+        try {
+          const response = await fetch("/api/v1/activity", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(activity),
+          });
+
+          if (response.ok) {
+            closeActivityModal();
+            window.location.reload();
+          } else {
+            alert("Failed to add activity");
+          }
+        } catch (error) {
+          console.error("Error adding activity:", error);
+          alert("Error adding activity");
         }
       },
     );

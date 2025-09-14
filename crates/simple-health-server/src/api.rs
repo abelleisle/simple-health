@@ -2,7 +2,7 @@ use crate::auth::{
     authenticate::{login, refresh_token},
     required_auth,
 };
-use crate::core::types::Meal;
+use crate::core::types::{Activity, Meal};
 use crate::{ServerState, UserContext};
 use axum::{
     Extension, Router,
@@ -17,6 +17,7 @@ use axum::{
 pub fn get_routes(state: ServerState) -> Router<ServerState> {
     Router::new()
         .route("/meal", post(meal))
+        .route("/activity", post(activity))
         .layer(middleware::from_fn_with_state(state, required_auth_api))
         .route("/health", get(health_check))
         .route("/login", post(login))
@@ -61,6 +62,26 @@ pub async fn meal(
 
     let _ = meal.insert(app.db.get_pool()).await.map_err(|e| {
         log::error!("Unable to insert meal {:?} into db: {}", meal, e);
+        return StatusCode::INTERNAL_SERVER_ERROR;
+    });
+
+    StatusCode::OK
+}
+
+pub async fn activity(
+    State(app): State<ServerState>,
+    Extension(ctx): Extension<UserContext>,
+    Json(mut activity): Json<Activity>,
+) -> impl IntoResponse {
+    if ctx.user.is_none() {
+        return StatusCode::INTERNAL_SERVER_ERROR;
+    }
+
+    activity.user_id = ctx.user.unwrap().id;
+    log::info!("Activity: {:?}", activity);
+
+    let _ = activity.insert(app.db.get_pool()).await.map_err(|e| {
+        log::error!("Unable to insert activity {:?} into db: {}", activity, e);
         return StatusCode::INTERNAL_SERVER_ERROR;
     });
 
