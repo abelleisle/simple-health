@@ -245,7 +245,7 @@ async fn login(
     context.insert(
         "settings",
         &serde_json::json!( {
-            "signup_allowed": &state.signup_allowed
+            "signup_allowed": state.is_signup_allowed()
         }),
     );
 
@@ -265,7 +265,7 @@ async fn signup(
 ) -> impl IntoResponse {
     let mut context = Context::new();
 
-    if !state.signup_allowed {
+    if !state.is_signup_allowed() {
         return Redirect::to("/login").into_response();
     }
 

@@ -12,6 +12,7 @@ use axum::{
     Router, middleware,
     routing::{get, post},
 };
+use std::sync::{Arc, RwLock};
 use tower_http::cors::Any;
 use tower_http::{cors::CorsLayer, services::ServeDir};
 use uuid::Uuid;
@@ -28,7 +29,35 @@ pub struct UserContext {
 #[derive(Clone)]
 pub struct ServerState {
     pub db: db::DatabaseConnection,
+    pub config: Arc<RwLock<ServerConfig>>,
+}
+
+#[derive(Clone)]
+pub struct ServerConfig {
     pub signup_allowed: bool,
+    pub signup_disable_after_create: bool,
+}
+
+impl ServerState {
+    fn is_signup_allowed(&self) -> bool {
+        match self.config.read() {
+            Ok(config) => config.signup_allowed,
+            Err(e) => {
+                log::error!("Unable to read config from state: {}", e);
+                false
+            }
+        }
+    }
+
+    fn should_disable_signup(&self) -> bool {
+        match self.config.read() {
+            Ok(config) => config.signup_disable_after_create,
+            Err(e) => {
+                log::error!("Unable to read config from state: {}", e);
+                false
+            }
+        }
+    }
 }
 
 #[tokio::main]
@@ -50,21 +79,34 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         e
     })?;
 
-    let signup = Signup {
-        email: "user@example.com".to_string(),
-        password: "12345".to_string(),
-        name: "Test User".to_string(),
-        settings: None,
+    let config = ServerConfig {
+        signup_allowed: true,
+        signup_disable_after_create: true,
     };
-
-    let user = create_test_user(db.get_pool(), &signup).await?;
-
-    log::info!("User uuid: {}", user.id);
 
     let state = ServerState {
         db,
-        signup_allowed: true,
+        config: Arc::new(RwLock::new(config)),
     };
+
+    if state.should_disable_signup() {
+        let should_disable = match User::count(&state.db.get_pool()).await {
+            Ok(c) => {
+                log::debug!("{} users in the database, should disable if > 0", c);
+                c > 0
+            }
+            Err(e) => {
+                log::error!(
+                    "Unable to fetch user count, disabling signup for safety. Err: {}",
+                    e
+                );
+                true
+            }
+        };
+
+        state.config.write().unwrap().signup_allowed = !should_disable;
+    }
+
     let app = create_app(state);
 
     let addr = "0.0.0.0:3000";
@@ -106,21 +148,4 @@ fn create_app(state: ServerState) -> Router {
     // }
 
     app
-}
-
-async fn create_test_user(
-    pool: &db::DBPool,
-    signup: &Signup,
-) -> Result<User, Box<dyn std::error::Error + Sync + Send>> {
-    let get_user = User::get(pool, None, Some(&signup.email)).await?;
-    match get_user {
-        Some(u) => {
-            log::debug!("Got existing user {}", u.id);
-            Ok(u)
-        }
-        None => {
-            log::debug!("Creating new user with email {}", signup.email);
-            Ok(User::new(pool, signup).await?)
-        }
-    }
 }

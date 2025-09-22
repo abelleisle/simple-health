@@ -79,6 +79,14 @@ impl User {
         .await
     }
 
+    pub async fn count(pool: &db::DBPool) -> Result<i64, sqlx::Error> {
+        let result = sqlx::query_scalar::<_, i64>("SELECT COUNT(*) FROM users")
+            .fetch_one(pool)
+            .await?;
+
+        Ok(result)
+    }
+
     pub async fn find_by_id(pool: &PgPool, user_id: Uuid) -> Result<Option<User>, sqlx::Error> {
         sqlx::query_as::<_, User>(
             "SELECT id, email, name, calorie_goal, created_at, updated_at FROM users WHERE id = $1",

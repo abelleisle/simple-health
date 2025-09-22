@@ -118,7 +118,7 @@ pub async fn signup(
 
     // Create a new JWT token
     let claims = Claims::with(&user);
-    match jwt::generate_jwt(JWT_SIGNING_KEY, claims) {
+    let resp = match jwt::generate_jwt(JWT_SIGNING_KEY, claims) {
         Ok(token) => (
             jar.add(default_cookie("jwt", token, 1)).add(default_cookie(
                 "refresh",
@@ -131,7 +131,15 @@ pub async fn signup(
         Err(_) => {
             return (StatusCode::INTERNAL_SERVER_ERROR, "Uh oh :((").into_response();
         }
+    };
+
+    if app.should_disable_signup() {
+        // If we can't disable signup, we should abort since this could
+        // be a security issue
+        app.config.write().unwrap().signup_allowed = false;
     }
+
+    return resp;
 }
 
 #[derive(Debug, Deserialize)]
