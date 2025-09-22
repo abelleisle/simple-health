@@ -1,4 +1,5 @@
 use crate::auth;
+use crate::crypto;
 use crate::db;
 
 use sqlx::{PgPool, Row};
@@ -8,12 +9,17 @@ use crate::core::types::{Signin, Signup, User};
 
 impl User {
     pub async fn new(pool: &db::DBPool, signup: &Signup) -> Result<User, sqlx::Error> {
+        let password_hash = crypto::password::hash(&signup.password).map_err(|e| {
+            log::error!("Unable to hash user {} password: {}", signup.email, e);
+            return sqlx::Error::BeginFailed;
+        })?;
+
         let user = sqlx::query_as::<_, User>(
             "INSERT INTO users (email, password_hash, name) VALUES ($1, $2, $3)
             RETURNING id, email, name",
         )
         .bind(&signup.email)
-        .bind(&signup.password)
+        .bind(password_hash)
         .bind(&signup.name)
         .fetch_one(pool)
         .await;
@@ -152,9 +158,22 @@ impl User {
         if let Some((user, password_hash)) = User::get_with_password(pool, &signin.username).await?
         {
             // Verify password (you'll need a password hashing crate like bcrypt or argon2)
-            if auth::verify_password(&signin.password, &password_hash) {
-                return Ok(Some(user));
-            }
+            return match crypto::password::verify(&signin.password, &password_hash) {
+                Ok(true) => Ok(Some(user)),
+                Ok(false) => {
+                    log::warn!("Invalid credentials for user {}", user.email);
+                    Ok(None)
+                }
+                Err(e) => {
+                    log::error!("Unable to verify user {} password: {}", user.email, e);
+                    Err(sqlx::Error::InvalidArgument(
+                        "Unable to parse hashed password".to_string(),
+                    ))
+                }
+            };
+            // if auth::verify_password(&signin.password, &password_hash) {
+            //     return Ok(Some(user));
+            // }
         }
 
         Ok(None)

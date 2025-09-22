@@ -2,6 +2,7 @@ mod api;
 mod auth;
 mod base;
 mod core;
+mod crypto;
 mod db;
 mod serve;
 mod session;
@@ -62,7 +63,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let state = ServerState {
         db,
-        signup_allowed: false,
+        signup_allowed: true,
     };
     let app = create_app(state);
 
