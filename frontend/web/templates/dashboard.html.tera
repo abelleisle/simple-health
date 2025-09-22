@@ -22,9 +22,16 @@
 
     <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div class="mb-6">
-            <label for="date" class="block text-sm font-medium text-gray-700 mb-2">
-                Select Date
-            </label>
+            <div class="flex items-center justify-between mb-2">
+                <label for="date" class="block text-sm font-medium text-gray-700">
+                    Select Date
+                </label>
+                {% if selected_date != current_date %}
+                <a href="/" class="text-sm bg-blue-600 text-white px-3 py-1 rounded-md hover:bg-blue-700 transition-colors">
+                    Back to Today
+                </a>
+                {% endif %}
+            </div>
             <input
                 type="date"
                 id="date"
@@ -140,7 +147,7 @@
 
             <!-- Recent Entries -->
             <div class="bg-white p-6 rounded-lg shadow col-span-full">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Entries</h2>
+                <h2 class="text-lg font-semibold text-gray-900 mb-4"> {% if selected_date == current_date %} Recent {% endif %} Entries</h2>
                 {% if stats.entries %}
                 <div class="space-y-2">
                     {% for entry in stats.entries %}
@@ -162,7 +169,7 @@
 
             <!-- Recent Activities -->
             <div class="bg-white p-6 rounded-lg shadow col-span-full">
-                <h2 class="text-lg font-semibold text-gray-900 mb-4">Recent Activities</h2>
+                <h2 class="text-lg font-semibold text-gray-900 mb-4"> {% if selected_date == current_date %} Recent {% endif %} Activities</h2>
                 {% if stats.activities %}
                 <div class="space-y-2">
                     {% for activity in stats.activities %}
