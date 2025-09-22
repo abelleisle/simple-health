@@ -72,7 +72,10 @@ function openModal(): void {
     "food-date",
   ) as HTMLInputElement | null;
   if (dateInput) {
-    dateInput.value = now.toISOString().split("T")[0]; // YYYY-MM-DD format
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, "0");
+    const day = now.getDate().toString().padStart(2, "0");
+    dateInput.value = `${year}-${month}-${day}`; // YYYY-MM-DD format in local time
   }
 
   // Set current time
@@ -107,7 +110,10 @@ function openActivityModal(): void {
     "activity-date",
   ) as HTMLInputElement | null;
   if (dateInput) {
-    dateInput.value = now.toISOString().split("T")[0]; // YYYY-MM-DD format
+    const year = now.getFullYear();
+    const month = (now.getMonth() + 1).toString().padStart(2, "0");
+    const day = now.getDate().toString().padStart(2, "0");
+    dateInput.value = `${year}-${month}-${day}`; // YYYY-MM-DD format in local time
   }
 
   // Set current time

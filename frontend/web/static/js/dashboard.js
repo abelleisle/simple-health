@@ -54,7 +54,10 @@ function openModal() {
     // Set current date
     const dateInput = document.getElementById("food-date");
     if (dateInput) {
-        dateInput.value = now.toISOString().split("T")[0]; // YYYY-MM-DD format
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, "0");
+        const day = now.getDate().toString().padStart(2, "0");
+        dateInput.value = `${year}-${month}-${day}`; // YYYY-MM-DD format in local time
     }
     // Set current time
     const timeInput = document.getElementById("food-time");
@@ -79,7 +82,10 @@ function openActivityModal() {
     // Set current date
     const dateInput = document.getElementById("activity-date");
     if (dateInput) {
-        dateInput.value = now.toISOString().split("T")[0]; // YYYY-MM-DD format
+        const year = now.getFullYear();
+        const month = (now.getMonth() + 1).toString().padStart(2, "0");
+        const day = now.getDate().toString().padStart(2, "0");
+        dateInput.value = `${year}-${month}-${day}`; // YYYY-MM-DD format in local time
     }
     // Set current time
     const timeInput = document.getElementById("activity-time");
