@@ -12,15 +12,6 @@ use axum::{
     response::{IntoResponse, Redirect},
 };
 
-// You'll need to implement this function using a password hashing library
-pub fn verify_password(password: &str, hash: &str) -> bool {
-    // Example with bcrypt (you'll need to add bcrypt to Cargo.toml):
-    // bcrypt::verify(password, hash).unwrap_or(false)
-
-    // Placeholder - replace with actual password verification
-    password == hash
-}
-
 /// middleware that requires the user to be authenticated
 pub async fn required_auth(
     Extension(context): Extension<UserContext>,
@@ -34,7 +25,8 @@ pub async fn required_auth(
     next.run(request).await
 }
 
-/// middleware that requires the user to be authenticated
+/*
+/// middleware that requires the user to be an admin
 pub async fn required_admin(
     Extension(context): Extension<UserContext>,
     request: Request,
@@ -46,3 +38,4 @@ pub async fn required_admin(
 
     next.run(request).await
 }
+*/

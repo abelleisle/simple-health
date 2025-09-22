@@ -6,15 +6,9 @@ use crate::auth::{
 use crate::core::types::User;
 use crate::session::RefreshToken;
 use crate::{ServerState, UserContext};
+use axum::extract::Request;
 use axum::middleware::Next;
-use axum::{
-    Router,
-    extract::State,
-    http::StatusCode,
-    response::IntoResponse,
-    routing::{get, post},
-};
-use axum::{body::Body, extract::Request, response::Response};
+use axum::{extract::State, response::IntoResponse};
 use axum_extra::extract::cookie::CookieJar;
 
 pub async fn base(

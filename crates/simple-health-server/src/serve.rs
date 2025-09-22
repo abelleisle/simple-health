@@ -6,7 +6,7 @@ use axum::{
     response::{Html, IntoResponse, Redirect},
     routing::{get, post},
 };
-use chrono::{Duration, Local, NaiveDate, TimeZone, Utc};
+use chrono::{Local, NaiveDate, TimeZone, Utc};
 use serde::Deserialize;
 use std::collections::HashMap;
 use tera::{Context, Tera};

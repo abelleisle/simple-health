@@ -6,6 +6,6 @@ pub(crate) fn default_cookie<'a>(key: &str, token: String, duration_hrs: u64) ->
         .path("/")
         .http_only(true)
         .max_age(Duration::seconds((duration_hrs * 3600) as i64))
-        .secure(!crate::utils::IS_DEBUG)
+        .secure(!crate::utils::dev::is_debug_version())
         .build()
 }

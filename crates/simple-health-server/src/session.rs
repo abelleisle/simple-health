@@ -1,8 +1,6 @@
 use crate::core::types::User;
 use crate::db::DBPool;
 use jwt_simple::reexports::rand;
-use serde::de::DeserializeOwned;
-use sqlx::types::Json;
 
 use base64::{Engine as _, engine::general_purpose::URL_SAFE_NO_PAD};
 use chrono::{DateTime, Utc};

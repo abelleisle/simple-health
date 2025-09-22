@@ -1,10 +1,10 @@
 use axum::{
     extract::{FromRef, OptionalFromRequestParts},
-    http::{StatusCode, request::Parts},
+    http::request::Parts,
     response::Redirect,
 };
 use axum_extra::extract::cookie::CookieJar;
-use chrono::{DateTime, Duration, TimeDelta, Utc};
+use chrono::{Duration, TimeDelta, Utc};
 use jsonwebtoken::{Algorithm, DecodingKey, EncodingKey, Header, Validation, decode, encode};
 use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use uuid::Uuid;
@@ -53,7 +53,7 @@ where
 
     async fn from_request_parts(
         req: &mut Parts,
-        state: &S,
+        _state: &S,
     ) -> Result<Option<Self>, Self::Rejection> {
         let jar = CookieJar::from_headers(&req.headers);
         if let Some(jwt) = jar.get("jwt").map(|c| c.value()) {

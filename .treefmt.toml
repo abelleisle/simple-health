@@ -12,7 +12,7 @@ includes = [ "*.nix" ]
 # Rust formatter
 [formatter.rust]
 command = "rustfmt"
-options = ["--edition", "2024"]
+options = ["--edition", "2024", "--style-edition", "2024"]
 includes = ["*.rs"]
 
 # TypeScript/JavaScript formatter

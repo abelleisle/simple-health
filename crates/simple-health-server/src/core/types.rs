@@ -1,4 +1,4 @@
-use chrono::{DateTime, TimeDelta, Utc};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 use ts_rs::TS;
@@ -29,20 +29,6 @@ pub struct UserSetting {
 pub struct Signin {
     pub username: String,
     pub password: String,
-}
-
-pub enum UserRef {
-    User(User),
-    ID(Uuid),
-}
-
-impl UserRef {
-    pub fn id(self: Self) -> Uuid {
-        match self {
-            UserRef::User(u) => u.id,
-            UserRef::ID(i) => i,
-        }
-    }
 }
 
 #[derive(FromRow, Clone, Debug, Deserialize, TS)]

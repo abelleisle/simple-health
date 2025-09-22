@@ -1,10 +1,10 @@
-use crate::core::types::{Goal, UserRef};
+use crate::core::types::{Goal, User};
 use crate::db;
 
 impl Goal {
     pub async fn new(
         pool: &db::DBPool,
-        user: UserRef,
+        user: &User,
         consumed: Option<i32>,
         burned: Option<i32>,
     ) -> Result<Self, sqlx::Error> {
@@ -12,7 +12,7 @@ impl Goal {
             "INSERT INTO meals (user_id, calories_consumed, calories_burned) VALUES ($1, $2, $3)
             RETURNING user_id, calories_consumed, calories_burned, created_at",
         )
-        .bind(user.id())
+        .bind(user.id)
         .bind(consumed)
         .bind(burned)
         .fetch_one(pool)

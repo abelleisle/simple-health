@@ -1,11 +1,8 @@
 use axum::{
     Form,
     extract::{Extension, Query, State},
-    http::{
-        StatusCode,
-        header::{HeaderMap, SET_COOKIE},
-    },
-    response::{IntoResponse, Redirect, Response},
+    http::StatusCode,
+    response::{IntoResponse, Redirect},
 };
 use axum_extra::extract::cookie::{Cookie, CookieJar};
 use serde::Deserialize;

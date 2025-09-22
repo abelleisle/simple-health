@@ -8,16 +8,12 @@ mod serve;
 mod session;
 mod utils;
 
-use axum::{
-    Router, middleware,
-    routing::{get, post},
-};
+use axum::{Router, middleware};
 use std::sync::{Arc, RwLock};
 use tower_http::cors::Any;
-use tower_http::{cors::CorsLayer, services::ServeDir};
-use uuid::Uuid;
+use tower_http::cors::CorsLayer;
 
-use core::types::{Signup, User};
+use core::types::User;
 
 #[derive(Clone)]
 pub struct UserContext {

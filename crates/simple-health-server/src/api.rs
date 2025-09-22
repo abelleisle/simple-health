@@ -1,7 +1,4 @@
-use crate::auth::{
-    authenticate::{login, refresh_token, signup},
-    required_auth,
-};
+use crate::auth::authenticate::{login, refresh_token, signup};
 use crate::core::types::{Activity, Meal};
 use crate::{ServerState, UserContext};
 use axum::{
@@ -10,7 +7,7 @@ use axum::{
     http::StatusCode,
     middleware,
     middleware::Next,
-    response::{IntoResponse, Json, Redirect},
+    response::{IntoResponse, Json},
     routing::{get, post},
 };
 
