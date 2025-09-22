@@ -13,7 +13,7 @@ impl User {
             RETURNING id, email, name",
         )
         .bind(&signup.email)
-        .bind(&signup.password_hash)
+        .bind(&signup.password)
         .bind(&signup.name)
         .fetch_one(pool)
         .await;

@@ -1,5 +1,5 @@
 use crate::auth::{
-    authenticate::{login, refresh_token},
+    authenticate::{login, refresh_token, signup},
     required_auth,
 };
 use crate::core::types::{Activity, Meal};
@@ -21,6 +21,7 @@ pub fn get_routes(state: ServerState) -> Router<ServerState> {
         .layer(middleware::from_fn_with_state(state, required_auth_api))
         .route("/health", get(health_check))
         .route("/login", post(login))
+        .route("/signup", post(signup))
         .route("/refresh_token", get(refresh_token))
 }
 

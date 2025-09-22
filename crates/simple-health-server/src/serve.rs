@@ -35,6 +35,7 @@ pub fn get_routes(state: ServerState) -> Router<ServerState> {
         .route("/", get(dashboard))
         .layer(middleware::from_fn_with_state(state, required_auth))
         .route("/login", get(login))
+        .route("/signup", get(signup))
         .route("/signout", post(signout))
         .nest_service("/static/css", ServeDir::new("frontend/web/static/css"))
         .nest_service("/static/js", ServeDir::new("frontend/web/static/js"))
@@ -222,7 +223,7 @@ async fn dashboard(
 }
 
 async fn login(
-    State(_state): State<ServerState>,
+    State(state): State<ServerState>,
     Query(query): Query<LoginQuery>,
     Extension(tera): Extension<Tera>,
     Extension(ctx): Extension<UserContext>,
@@ -241,7 +242,46 @@ async fn login(
     // context.insert("error", "Invalid credentials");
     // context.insert("username", "user@example.com");
 
+    context.insert(
+        "settings",
+        &serde_json::json!( {
+            "signup_allowed": &state.signup_allowed
+        }),
+    );
+
     let rendered = tera.render("login.html.tera", &context).map_err(|e| {
+        log::error!("Error rendering login: {}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    });
+
+    Html(rendered).into_response()
+}
+
+async fn signup(
+    State(state): State<ServerState>,
+    Query(query): Query<LoginQuery>,
+    Extension(tera): Extension<Tera>,
+    Extension(ctx): Extension<UserContext>,
+) -> impl IntoResponse {
+    let mut context = Context::new();
+
+    if !state.signup_allowed {
+        return Redirect::to("/login").into_response();
+    }
+
+    if ctx.user.is_some() {
+        return Redirect::to("/").into_response();
+    }
+
+    if let Some(error) = query.error {
+        context.insert("error", &error);
+    }
+
+    // You can add error handling and username persistence here
+    // context.insert("error", "Invalid credentials");
+    // context.insert("username", "user@example.com");
+
+    let rendered = tera.render("signup.html.tera", &context).map_err(|e| {
         log::error!("Error rendering login: {}", e);
         StatusCode::INTERNAL_SERVER_ERROR
     });

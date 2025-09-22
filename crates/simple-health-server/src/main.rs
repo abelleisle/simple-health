@@ -27,6 +27,7 @@ pub struct UserContext {
 #[derive(Clone)]
 pub struct ServerState {
     pub db: db::DatabaseConnection,
+    pub signup_allowed: bool,
 }
 
 #[tokio::main]
@@ -50,15 +51,19 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let signup = Signup {
         email: "user@example.com".to_string(),
-        password_hash: "12345".to_string(),
+        password: "12345".to_string(),
         name: "Test User".to_string(),
+        settings: None,
     };
 
     let user = create_test_user(db.get_pool(), &signup).await?;
 
     log::info!("User uuid: {}", user.id);
 
-    let state = ServerState { db };
+    let state = ServerState {
+        db,
+        signup_allowed: false,
+    };
     let app = create_app(state);
 
     let addr = "0.0.0.0:3000";

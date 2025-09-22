@@ -12,9 +12,16 @@ mod user;
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct Signup {
-    pub email: String,
-    pub password_hash: String,
     pub name: String,
+    pub email: String,
+    pub password: String,
+    pub settings: Option<UserSetting>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, TS)]
+#[ts(export)]
+pub struct UserSetting {
+    pub calorie_goal: Option<i32>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]

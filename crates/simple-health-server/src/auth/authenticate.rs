@@ -11,7 +11,7 @@ use axum_extra::extract::cookie::{Cookie, CookieJar};
 use serde::Deserialize;
 
 use crate::auth::{cookie::default_cookie, jwt, jwt::Claims};
-use crate::core::types::{Signin, User};
+use crate::core::types::{Signin, Signup, User};
 use crate::session::RefreshToken;
 use crate::{ServerState, UserContext};
 
@@ -52,6 +52,71 @@ pub async fn login(
         }
     };
 
+    let claims = Claims::with(&user);
+    match jwt::generate_jwt(JWT_SIGNING_KEY, claims) {
+        Ok(token) => (
+            jar.add(default_cookie("jwt", token, 1)).add(default_cookie(
+                "refresh",
+                refresh_token.token,
+                30 * 24,
+            )),
+            Redirect::to("/"),
+        )
+            .into_response(),
+        Err(_) => {
+            return (StatusCode::INTERNAL_SERVER_ERROR, "Uh oh :((").into_response();
+        }
+    }
+}
+
+pub async fn signup(
+    State(app): State<ServerState>,
+    jar: CookieJar,
+    Extension(_ctx): Extension<UserContext>,
+    Form(signup): Form<Signup>,
+) -> impl IntoResponse {
+    // TODO check if auth-bypass is desired
+    // if ctx.user_id.is_some() {
+    //     return Redirect::to("/").into_response();
+    // }
+
+    match User::get(app.db.get_pool(), None, Some(&signup.email)).await {
+        Ok(None) => {}
+        Ok(Some(_)) => {
+            log::warn!("User {} already exists", signup.email);
+            return Redirect::to("/signup?error=User+already+exists").into_response();
+        }
+        Err(e) => {
+            log::error!("Error fetching user {}: {}", signup.email, e);
+            return (StatusCode::INTERNAL_SERVER_ERROR, "Uh oh :(").into_response();
+        }
+    };
+
+    // There is no existing user, let's create one!
+    let user = match User::new(app.db.get_pool(), &signup).await {
+        Ok(user) => user,
+        Err(e) => {
+            log::error!("Error creating user {}: {}", signup.email, e);
+            return (StatusCode::INTERNAL_SERVER_ERROR, "Uh oh :(").into_response();
+        }
+    };
+
+    // Now that we've created the user, log them in
+
+    // Create a refresh token for the user
+    let refresh_token = match RefreshToken::create(app.db.get_pool(), user.id).await {
+        Ok(token) => token,
+        Err(e) => {
+            log::error!("Refresh token creation error: {}", e);
+            return (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Somethign bad happened, try again later",
+            )
+                .into_response();
+        }
+    };
+
+    // Create a new JWT token
     let claims = Claims::with(&user);
     match jwt::generate_jwt(JWT_SIGNING_KEY, claims) {
         Ok(token) => (
