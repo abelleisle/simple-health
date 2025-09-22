@@ -21,6 +21,11 @@ struct LoginQuery {
     error: Option<String>,
 }
 
+#[derive(Deserialize)]
+struct DashboardQuery {
+    date: Option<String>,
+}
+
 pub fn get_routes(state: ServerState) -> Router<ServerState> {
     let mut tera = Tera::new("frontend/web/templates/**/*").expect("Failed to initialize Tera");
 
@@ -44,6 +49,7 @@ async fn dashboard(
     State(state): State<ServerState>,
     Extension(ctx): Extension<UserContext>,
     Extension(tera): Extension<Tera>,
+    Query(query): Query<DashboardQuery>,
 ) -> Result<Html<String>, StatusCode> {
     let mut context = Context::new();
 
@@ -173,9 +179,11 @@ async fn dashboard(
         }),
     );
 
-    // Add current date
+    // Add current date and selected date
     let current_date = chrono::Local::now().format("%Y-%m-%d").to_string();
-    context.insert("selected_date", &current_date);
+    let selected_date = query.date.unwrap_or_else(|| current_date.clone());
+    context.insert("selected_date", &selected_date);
+    context.insert("current_date", &current_date);
 
     // Add health status with database connection check
     let db_connected = state.db.is_connected();
