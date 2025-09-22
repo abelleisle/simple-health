@@ -29,6 +29,8 @@ in {
     cmake
     clang
 
+    typescript-language-server
+
     at-spi2-atk
     atkmm
     cairo

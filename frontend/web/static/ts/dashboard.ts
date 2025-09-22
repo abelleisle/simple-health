@@ -327,12 +327,10 @@ document.addEventListener("DOMContentLoaded", function (): void {
           `${dateInput.value}T${timeInput.value}`,
         ).toISOString();
 
-        // Convert duration from HH:MM to Duration format (optional)
+        // Get duration directly as seconds (optional)
         let duration = null;
         if (durationInput.value) {
-          const [hours, minutes] = durationInput.value.split(":").map(Number);
-          // Convert to total seconds for now - we'll need to adjust based on backend Duration handling
-          duration = (hours * 60 + minutes) * 60;
+          duration = parseInt(durationInput.value, 10) * 60;
         }
 
         const activity: Activity = {
