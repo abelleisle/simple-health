@@ -13,7 +13,7 @@ use tera::{Context, Tera};
 use tower_http::services::ServeDir;
 
 use crate::auth::{authenticate::signout, required_auth};
-use crate::core::types::Meal;
+use crate::core::types::{Activity, Meal};
 use crate::{ServerState, UserContext};
 
 #[derive(Deserialize)]
@@ -62,7 +62,7 @@ async fn dashboard(
         .unwrap()
         .and_utc();
     let meals = Meal::fetch_between_dates(
-        ctx.user.unwrap().id,
+        &ctx.user.as_ref().unwrap().id,
         five_days_ago_midnight,
         None,
         state.db.get_pool(),
@@ -71,6 +71,22 @@ async fn dashboard(
     .map_err(|e| {
         log::error!(
             "Unable to fetch meals between {} and now: {}",
+            five_days_ago_midnight,
+            e
+        );
+        return StatusCode::INTERNAL_SERVER_ERROR;
+    })?;
+
+    let activities = Activity::fetch_between_dates(
+        &ctx.user.as_ref().unwrap().id,
+        five_days_ago_midnight,
+        None,
+        state.db.get_pool(),
+    )
+    .await
+    .map_err(|e| {
+        log::error!(
+            "Unable to fetch activities between {} and now: {}",
             five_days_ago_midnight,
             e
         );
@@ -90,19 +106,54 @@ async fn dashboard(
         })
         .collect();
 
-    log::debug!("Entries: {:?}", entries);
+    let activity_entries: Vec<_> = activities
+        .iter()
+        .map(|a| {
+            let mut map: HashMap<&str, String> = HashMap::new();
+            map.insert("name", a.description.clone());
+            map.insert("type", a.name.clone());
+            map.insert("time", a.created_at.to_string());
+            map.insert("calories", a.calories.to_string());
 
-    let total_cal: i32 = meals.iter().map(|m| m.calories).sum();
-    let reman_cal: i32 = goal - total_cal;
-    let percent: i32 = (100 * total_cal) / goal;
+            // Format duration if present
+            if let Some(duration_s) = a.duration_s {
+                let minutes = duration_s / 60;
+                let seconds = duration_s % 60;
+                let duration_str = if minutes > 0 {
+                    if seconds > 0 {
+                        format!("{}m {}s", minutes, seconds)
+                    } else {
+                        format!("{}m", minutes)
+                    }
+                } else {
+                    format!("{}s", seconds)
+                };
+                map.insert("duration", duration_str);
+            }
+
+            map
+        })
+        .collect();
+
+    log::debug!("Entries: {:?}", entries);
+    log::debug!("Activity entries: {:?}", activity_entries);
+
+    let consumed_cal: i32 = meals.iter().map(|m| m.calories).sum();
+    let burned_cal: i32 = activities.iter().map(|a| a.calories).sum();
+    let net_cal: i32 = consumed_cal - burned_cal;
+    let reman_cal: i32 = goal - net_cal;
+    let percent: i32 = (100 * net_cal) / goal;
 
     // Add dummy stats using serde_json for proper serialization
     context.insert(
         "stats",
         &serde_json::json!({
-            "total_calories": total_cal,
+            "total_calories": net_cal,
+            "consumed_calories": consumed_cal,
+            "burned_calories": burned_cal,
             "remaining_calories": reman_cal,
             "progress_percentage": percent,
+            "progress_bar": percent.clamp(0, 100),
             "meal_breakdown": {
                 "breakfast": meals .iter() .filter(|m| m.name == "Breakfast") .map(|m| m.calories) .sum::<i32>(),
                 "lunch": meals .iter() .filter(|m| m.name == "Lunch") .map(|m| m.calories) .sum::<i32>(),
@@ -110,21 +161,15 @@ async fn dashboard(
                 "snack": meals .iter() .filter(|m| m.name == "Snack") .map(|m| m.calories) .sum::<i32>(),
                 "coffee": meals .iter() .filter(|m| m.name == "Coffee") .map(|m| m.calories) .sum::<i32>(),
             },
-            // "entries": []
-            "entries": entries,//[
-                // {
-                //     "name": "Oatmeal with banana",
-                //     "type": "breakfast",
-                //     "time": "8:30 AM",
-                //     "calories": "350"
-                // },
-                // {
-                //     "name": "Chicken salad",
-                //     "type": "lunch",
-                //     "time": "12:45 PM",
-                //     "calories": "480"
-                // }
-            // ]
+            "activity_breakdown": {
+                "walk": activities .iter() .filter(|a| a.name == "Walk") .map(|a| a.calories) .sum::<i32>(),
+                "run": activities .iter() .filter(|a| a.name == "Run") .map(|a| a.calories) .sum::<i32>(),
+                "hike": activities .iter() .filter(|a| a.name == "Hike") .map(|a| a.calories) .sum::<i32>(),
+                "bike": activities .iter() .filter(|a| a.name == "Bike") .map(|a| a.calories) .sum::<i32>(),
+                "ski": activities .iter() .filter(|a| a.name == "Ski") .map(|a| a.calories) .sum::<i32>(),
+            },
+            "entries": entries,
+            "activities": activity_entries
         }),
     );
 

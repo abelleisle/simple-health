@@ -21,7 +21,7 @@ impl Meal {
     }
 
     pub async fn fetch_between_dates(
-        user_id: Uuid,
+        user_id: &Uuid,
         start_date: DateTime<Utc>,
         end_date: Option<DateTime<Utc>>,
         pool: &db::DBPool,
