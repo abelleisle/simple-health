@@ -6,7 +6,7 @@ use axum::{
     response::{Html, IntoResponse, Redirect},
     routing::{get, post},
 };
-use chrono::{Duration, Utc};
+use chrono::{Duration, Local, NaiveDate, TimeZone, Utc};
 use serde::Deserialize;
 use std::collections::HashMap;
 use tera::{Context, Tera};
@@ -61,23 +61,40 @@ async fn dashboard(
     user.insert("calorie_goal", goal.to_string());
     context.insert("user", &user);
 
-    // let entries: Vec<HashMap<String, String>> = Vec::new();
-    let five_days_ago_midnight = (Utc::now() - Duration::days(5))
-        .date_naive()
-        .and_hms_opt(0, 0, 0)
-        .unwrap()
-        .and_utc();
+    // Parse the selected date and convert to UTC date range
+    let current_date = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let selected_date = query.date.unwrap_or_else(|| current_date.clone());
+
+    // Parse the selected date string
+    let selected_naive_date = NaiveDate::parse_from_str(&selected_date, "%Y-%m-%d")
+        .map_err(|_| StatusCode::BAD_REQUEST)?;
+
+    // Create start and end times for the selected date in local timezone
+    let start_of_day_local = Local
+        .from_local_datetime(&selected_naive_date.and_hms_opt(0, 0, 0).unwrap())
+        .single()
+        .ok_or(StatusCode::BAD_REQUEST)?;
+    let end_of_day_local = Local
+        .from_local_datetime(&selected_naive_date.and_hms_opt(23, 59, 59).unwrap())
+        .single()
+        .ok_or(StatusCode::BAD_REQUEST)?;
+
+    // Convert to UTC for database queries
+    let start_of_day_utc = start_of_day_local.with_timezone(&Utc);
+    let end_of_day_utc = end_of_day_local.with_timezone(&Utc);
     let meals = Meal::fetch_between_dates(
         &ctx.user.as_ref().unwrap().id,
-        five_days_ago_midnight,
-        None,
+        start_of_day_utc,
+        Some(end_of_day_utc),
         state.db.get_pool(),
     )
     .await
     .map_err(|e| {
         log::error!(
-            "Unable to fetch meals between {} and now: {}",
-            five_days_ago_midnight,
+            "Unable to fetch meals for date {} (UTC: {} to {}): {}",
+            selected_date,
+            start_of_day_utc,
+            end_of_day_utc,
             e
         );
         return StatusCode::INTERNAL_SERVER_ERROR;
@@ -85,15 +102,17 @@ async fn dashboard(
 
     let activities = Activity::fetch_between_dates(
         &ctx.user.as_ref().unwrap().id,
-        five_days_ago_midnight,
-        None,
+        start_of_day_utc,
+        Some(end_of_day_utc),
         state.db.get_pool(),
     )
     .await
     .map_err(|e| {
         log::error!(
-            "Unable to fetch activities between {} and now: {}",
-            five_days_ago_midnight,
+            "Unable to fetch activities for date {} (UTC: {} to {}): {}",
+            selected_date,
+            start_of_day_utc,
+            end_of_day_utc,
             e
         );
         return StatusCode::INTERNAL_SERVER_ERROR;
@@ -179,9 +198,7 @@ async fn dashboard(
         }),
     );
 
-    // Add current date and selected date
-    let current_date = chrono::Local::now().format("%Y-%m-%d").to_string();
-    let selected_date = query.date.unwrap_or_else(|| current_date.clone());
+    // Add dates to context
     context.insert("selected_date", &selected_date);
     context.insert("current_date", &current_date);
 
