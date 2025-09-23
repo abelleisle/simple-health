@@ -6,7 +6,7 @@ use axum::{
     response::{Html, IntoResponse, Redirect},
     routing::{get, post},
 };
-use chrono::{Local, NaiveDate, TimeZone, Utc};
+use chrono::{Local, NaiveDate, TimeZone, Timelike, Utc};
 use chrono_tz::Tz;
 use serde::Deserialize;
 use std::collections::HashMap;
@@ -14,7 +14,7 @@ use tera::{Context, Tera};
 use tower_http::services::ServeDir;
 
 use crate::auth::{authenticate::signout, required_auth};
-use crate::core::types::{Activity, Meal};
+use crate::core::types::{Activity, Goal, Meal};
 use crate::{ServerState, UserContext};
 
 #[derive(Deserialize)]
@@ -55,30 +55,35 @@ async fn dashboard(
 ) -> Result<Html<String>, StatusCode> {
     let mut context = Context::new();
 
-    let goal: i32 = 2000;
-
-    // Add dummy user data
-    let mut user = HashMap::new();
-    user.insert("name", ctx.user.as_ref().unwrap().name.to_string());
-    user.insert("calorie_goal", goal.to_string());
-    context.insert("user", &user);
-
     // Get user's timezone, fallback to UTC if invalid
-    let user_timezone: Tz = ctx.settings.timezone.parse().unwrap_or(chrono_tz::UTC);
+    let user_timezone: Tz = ctx.settings.timezone.parse().unwrap_or_else(|e| {
+        log::error!(
+            "Unable to parse user's timezone ({}): {}",
+            ctx.settings.timezone,
+            e
+        );
+        chrono_tz::UTC
+    });
 
     // Parse the selected date and convert to UTC date range
-    let current_date = Utc::now()
-        .with_timezone(&user_timezone)
-        .format("%Y-%m-%d")
-        .to_string();
-    let selected_date = query.date.unwrap_or_else(|| current_date.clone());
+    let current_date_utc = Utc::now();
+    let current_date_tz = current_date_utc.with_timezone(&user_timezone);
+    let current_date_tz_str = current_date_tz.format("%Y-%m-%d").to_string();
 
-    log::info!("Current date: {}", current_date);
-    log::info!("Selected date: {}", selected_date);
-
-    // Parse the selected date string
-    let selected_naive_date = NaiveDate::parse_from_str(&selected_date, "%Y-%m-%d")
+    // Create selected_date versions
+    let selected_date_tz_str = query.date.unwrap_or_else(|| current_date_tz_str.clone());
+    let selected_naive_date = NaiveDate::parse_from_str(&selected_date_tz_str, "%Y-%m-%d")
         .map_err(|_| StatusCode::BAD_REQUEST)?;
+    let selected_date_tz = user_timezone
+        .from_local_datetime(&selected_naive_date.and_hms_opt(23, 59, 59).unwrap())
+        .single()
+        .ok_or(StatusCode::BAD_REQUEST)?;
+    let selected_date_utc = selected_date_tz.with_timezone(&Utc);
+
+    log::info!("Current date: {}", current_date_tz);
+    log::info!("Selected date: {}", selected_date_tz);
+    log::info!("Current date (UTC): {}", current_date_utc);
+    log::info!("Selected date (UTC): {}", selected_date_utc);
 
     // Create start and end times for the selected date in user's timezone
     let start_of_day_local = user_timezone
@@ -96,8 +101,25 @@ async fn dashboard(
     // Convert to UTC for database queries
     let start_of_day_utc = start_of_day_local.with_timezone(&Utc);
     let end_of_day_utc = end_of_day_local.with_timezone(&Utc);
+
+    // Get the latest goal given the current date
+    let goal = Goal::latest(
+        state.db.get_pool(),
+        &ctx.user.as_ref().unwrap(),
+        end_of_day_utc,
+    )
+    .await
+    .map_err(|e| {
+        log::error!(
+            "Unable to fetch latest goal for user {}: {}",
+            ctx.user.as_ref().unwrap().id,
+            e
+        );
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
     let meals = Meal::fetch_between_dates(
-        &ctx.user.as_ref().unwrap().id,
+        &ctx.user.as_ref().unwrap(),
         start_of_day_utc,
         Some(end_of_day_utc),
         state.db.get_pool(),
@@ -106,7 +128,7 @@ async fn dashboard(
     .map_err(|e| {
         log::error!(
             "Unable to fetch meals for date {} (UTC: {} to {}): {}",
-            selected_date,
+            selected_date_tz_str,
             start_of_day_utc,
             end_of_day_utc,
             e
@@ -115,7 +137,7 @@ async fn dashboard(
     })?;
 
     let activities = Activity::fetch_between_dates(
-        &ctx.user.as_ref().unwrap().id,
+        &ctx.user.as_ref().unwrap(),
         start_of_day_utc,
         Some(end_of_day_utc),
         state.db.get_pool(),
@@ -124,7 +146,7 @@ async fn dashboard(
     .map_err(|e| {
         log::error!(
             "Unable to fetch activities for date {} (UTC: {} to {}): {}",
-            selected_date,
+            selected_date_tz_str,
             start_of_day_utc,
             end_of_day_utc,
             e
@@ -138,7 +160,9 @@ async fn dashboard(
             let mut map: HashMap<&str, String> = HashMap::new();
             map.insert("name", m.description.clone());
             map.insert("type", m.name.clone());
-            map.insert("time", m.created_at.to_string());
+            // Convert UTC timestamp to user's timezone and format as time only
+            let local_time = m.created_at.with_timezone(&user_timezone);
+            map.insert("time", local_time.format("%H:%M").to_string());
             map.insert("calories", m.calories.to_string());
 
             map
@@ -151,7 +175,9 @@ async fn dashboard(
             let mut map: HashMap<&str, String> = HashMap::new();
             map.insert("name", a.description.clone());
             map.insert("type", a.name.clone());
-            map.insert("time", a.created_at.to_string());
+            // Convert UTC timestamp to user's timezone and format as time only
+            let local_time = a.created_at.with_timezone(&user_timezone);
+            map.insert("time", local_time.format("%H:%M").to_string());
             map.insert("calories", a.calories.to_string());
 
             // Format duration if present
@@ -174,14 +200,19 @@ async fn dashboard(
         })
         .collect();
 
+    let mut user = HashMap::new();
+    user.insert("name", ctx.user.as_ref().unwrap().name.to_string());
+    user.insert("calorie_goal", goal.get_consumed().to_string());
+    context.insert("user", &user);
+
     log::debug!("Entries: {:?}", entries);
     log::debug!("Activity entries: {:?}", activity_entries);
 
     let consumed_cal: i32 = meals.iter().map(|m| m.calories).sum();
     let burned_cal: i32 = activities.iter().map(|a| a.calories).sum();
     let net_cal: i32 = consumed_cal - burned_cal;
-    let reman_cal: i32 = goal - net_cal;
-    let percent: i32 = (100 * net_cal) / goal;
+    let reman_cal: i32 = goal.get_consumed() - net_cal;
+    let percent: i32 = (100 * net_cal) / goal.get_consumed();
 
     // Add dummy stats using serde_json for proper serialization
     context.insert(
@@ -213,8 +244,8 @@ async fn dashboard(
     );
 
     // Add dates to context
-    context.insert("selected_date", &selected_date);
-    context.insert("current_date", &current_date);
+    context.insert("selected_date", &selected_date_tz_str);
+    context.insert("current_date", &current_date_tz_str);
 
     // Add health status with database connection check
     let db_connected = state.db.is_connected();

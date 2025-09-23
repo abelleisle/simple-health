@@ -1,7 +1,6 @@
-use crate::core::types::Meal;
+use crate::core::types::{Meal, User};
 use crate::db;
 use chrono::{DateTime, Utc};
-use uuid::Uuid;
 
 impl Meal {
     pub async fn insert(self: &Self, pool: &db::DBPool) -> Result<(), sqlx::Error> {
@@ -21,7 +20,7 @@ impl Meal {
     }
 
     pub async fn fetch_between_dates(
-        user_id: &Uuid,
+        user: &User,
         start_date: DateTime<Utc>,
         end_date: Option<DateTime<Utc>>,
         pool: &db::DBPool,
@@ -33,7 +32,7 @@ impl Meal {
              WHERE user_id = $1 AND created_at >= $2 AND created_at <= $3 
              ORDER BY created_at DESC",
         )
-        .bind(user_id)
+        .bind(user.id)
         .bind(start_date)
         .bind(end_date)
         .fetch_all(pool)

@@ -1,4 +1,4 @@
-use crate::core::types::Activity;
+use crate::core::types::{Activity, User};
 use crate::db;
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
@@ -22,7 +22,7 @@ impl Activity {
     }
 
     pub async fn fetch_between_dates(
-        user_id: &Uuid,
+        user: &User,
         start_date: DateTime<Utc>,
         end_date: Option<DateTime<Utc>>,
         pool: &db::DBPool,
@@ -34,7 +34,7 @@ impl Activity {
              WHERE user_id = $1 AND created_at >= $2 AND created_at <= $3
              ORDER BY created_at DESC"
         )
-        .bind(user_id)
+        .bind(user.id)
         .bind(start_date)
         .bind(end_date)
         .fetch_all(pool)
