@@ -1,4 +1,4 @@
-import { generateUUID, getCurrentDateTimeInUserTimezone } from "./utils.js";
+import { generateUUID, getCurrentDateTimeInUserTimezone, convertUserDateTimeToUTC, } from "./utils.js";
 // Populate meal type dropdown
 function populateMealTypeDropdown() {
     // TODO this is trash and shouldn't be hardcoded.
@@ -164,8 +164,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 alert("Please fill in all required fields");
                 return;
             }
-            // Combine date and time into ISO string
-            const created_at = new Date(`${dateInput.value}T${timeInput.value}`).toISOString();
+            // Convert user's local date/time to UTC ISO string
+            const created_at = convertUserDateTimeToUTC(dateInput.value, timeInput.value);
             const meal = {
                 id: generateUUID(),
                 user_id: generateUUID(), // You might want to get this from user session instead
@@ -215,8 +215,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 alert("Please fill in all required fields");
                 return;
             }
-            // Combine date and time into ISO string
-            const created_at = new Date(`${dateInput.value}T${timeInput.value}`).toISOString();
+            // Convert user's local date/time to UTC ISO string
+            const created_at = convertUserDateTimeToUTC(dateInput.value, timeInput.value);
             // Get duration directly as seconds (optional)
             let duration = null;
             if (durationInput.value) {

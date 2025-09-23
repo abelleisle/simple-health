@@ -1,6 +1,10 @@
 // Dashboard functionality - minimal TypeScript for dynamic interactions
 import type { Meal, MealType, Activity, ActivityType } from "./types";
-import { generateUUID, getCurrentDateTimeInUserTimezone } from "./utils.ts";
+import {
+  generateUUID,
+  getCurrentDateTimeInUserTimezone,
+  convertUserDateTimeToUTC,
+} from "./utils.ts";
 
 // Populate meal type dropdown
 function populateMealTypeDropdown(): void {
@@ -233,10 +237,11 @@ document.addEventListener("DOMContentLoaded", function (): void {
           return;
         }
 
-        // Combine date and time into ISO string
-        const created_at = new Date(
-          `${dateInput.value}T${timeInput.value}`,
-        ).toISOString();
+        // Convert user's local date/time to UTC ISO string
+        const created_at = convertUserDateTimeToUTC(
+          dateInput.value,
+          timeInput.value,
+        );
 
         const meal: Meal = {
           id: generateUUID(),
@@ -310,10 +315,11 @@ document.addEventListener("DOMContentLoaded", function (): void {
           return;
         }
 
-        // Combine date and time into ISO string
-        const created_at = new Date(
-          `${dateInput.value}T${timeInput.value}`,
-        ).toISOString();
+        // Convert user's local date/time to UTC ISO string
+        const created_at = convertUserDateTimeToUTC(
+          dateInput.value,
+          timeInput.value,
+        );
 
         // Get duration directly as seconds (optional)
         let duration = null;

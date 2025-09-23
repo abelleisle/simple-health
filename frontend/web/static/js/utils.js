@@ -46,6 +46,42 @@ export function getCurrentDateTimeInUserTimezone() {
     }).format(now);
     return { date, time };
 }
+// Convert date/time in user's timezone to UTC ISO string
+export function convertUserDateTimeToUTC(date, time) {
+    const userTimezone = getUserTimezone();
+    // Simple approach: create the date string and let the browser handle conversion
+    // Since the user entered this time intending it to be in their timezone,
+    // we need to create a Date object that represents that moment in their timezone
+    const dateTimeString = `${date}T${time}:00`;
+    // Create a "fake" UTC date first
+    const fakeUtcDate = new Date(dateTimeString + "Z");
+    // Now format this date AS IF it were in the user's timezone to see what UTC time that would be
+    const utcTimeInUserTz = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: "UTC",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    }).format(fakeUtcDate);
+    const userTimeInUserTz = new Intl.DateTimeFormat("sv-SE", {
+        timeZone: userTimezone,
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+    }).format(fakeUtcDate);
+    // Calculate the difference and adjust
+    const utcMs = new Date(utcTimeInUserTz.replace(" ", "T") + "Z").getTime();
+    const userMs = new Date(userTimeInUserTz.replace(" ", "T") + "Z").getTime();
+    const offsetMs = utcMs - userMs;
+    // Apply the offset to get the correct UTC time
+    const correctUtcDate = new Date(fakeUtcDate.getTime() + offsetMs);
+    return correctUtcDate.toISOString();
+}
 // Generate a random UUID v4
 export function generateUUID() {
     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {

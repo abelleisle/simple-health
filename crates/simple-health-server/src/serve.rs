@@ -73,6 +73,9 @@ async fn dashboard(
         .to_string();
     let selected_date = query.date.unwrap_or_else(|| current_date.clone());
 
+    log::info!("Current date: {}", current_date);
+    log::info!("Selected date: {}", selected_date);
+
     // Parse the selected date string
     let selected_naive_date = NaiveDate::parse_from_str(&selected_date, "%Y-%m-%d")
         .map_err(|_| StatusCode::BAD_REQUEST)?;
@@ -86,6 +89,9 @@ async fn dashboard(
         .from_local_datetime(&selected_naive_date.and_hms_opt(23, 59, 59).unwrap())
         .single()
         .ok_or(StatusCode::BAD_REQUEST)?;
+
+    log::info!("Start local: {}", start_of_day_local);
+    log::info!("End local: {}", end_of_day_local);
 
     // Convert to UTC for database queries
     let start_of_day_utc = start_of_day_local.with_timezone(&Utc);
