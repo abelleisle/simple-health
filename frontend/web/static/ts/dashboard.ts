@@ -1,14 +1,6 @@
 // Dashboard functionality - minimal TypeScript for dynamic interactions
 import type { Meal, MealType, Activity, ActivityType } from "./types";
-
-// Generate a random UUID v4
-function generateUUID(): string {
-  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, function (c) {
-    const r = (Math.random() * 16) | 0;
-    const v = c == "x" ? r : (r & 0x3) | 0x8;
-    return v.toString(16);
-  });
-}
+import { generateUUID, getCurrentDateTimeInUserTimezone } from "./utils.ts";
 
 // Populate meal type dropdown
 function populateMealTypeDropdown(): void {
@@ -64,18 +56,15 @@ function openModal(): void {
   const modal = document.getElementById("food-modal");
   modal?.classList.remove("hidden");
 
-  // Set current date and time as defaults
-  const now = new Date();
+  // Get current date and time in user's timezone
+  const { date, time } = getCurrentDateTimeInUserTimezone();
 
   // Set current date
   const dateInput = document.getElementById(
     "food-date",
   ) as HTMLInputElement | null;
   if (dateInput) {
-    const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, "0");
-    const day = now.getDate().toString().padStart(2, "0");
-    dateInput.value = `${year}-${month}-${day}`; // YYYY-MM-DD format in local time
+    dateInput.value = date;
   }
 
   // Set current time
@@ -83,9 +72,7 @@ function openModal(): void {
     "food-time",
   ) as HTMLInputElement | null;
   if (timeInput) {
-    const hours = now.getHours().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    timeInput.value = `${hours}:${minutes}`; // HH:MM format
+    timeInput.value = time;
   }
 }
 
@@ -102,18 +89,15 @@ function openActivityModal(): void {
   const modal = document.getElementById("activity-modal");
   modal?.classList.remove("hidden");
 
-  // Set current date and time as defaults
-  const now = new Date();
+  // Get current date and time in user's timezone
+  const { date, time } = getCurrentDateTimeInUserTimezone();
 
   // Set current date
   const dateInput = document.getElementById(
     "activity-date",
   ) as HTMLInputElement | null;
   if (dateInput) {
-    const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, "0");
-    const day = now.getDate().toString().padStart(2, "0");
-    dateInput.value = `${year}-${month}-${day}`; // YYYY-MM-DD format in local time
+    dateInput.value = date;
   }
 
   // Set current time
@@ -121,9 +105,7 @@ function openActivityModal(): void {
     "activity-time",
   ) as HTMLInputElement | null;
   if (timeInput) {
-    const hours = now.getHours().toString().padStart(2, "0");
-    const minutes = now.getMinutes().toString().padStart(2, "0");
-    timeInput.value = `${hours}:${minutes}`; // HH:MM format
+    timeInput.value = time;
   }
 }
 

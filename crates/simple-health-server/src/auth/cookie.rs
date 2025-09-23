@@ -19,7 +19,7 @@ pub mod settings {
         let cookie = Cookie::build(("settings", settings_json))
             .path("/")
             .secure(!crate::utils::dev::is_debug_version())
-            .http_only(true)
+            .http_only(false)
             .build();
 
         Ok(cookie)

@@ -11,12 +11,17 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "declaration": false,
+    // "composite": true,
     "sourceMap": true,
     "removeComments": false,
     "noEmitOnError": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "allowImportingTsExtensions": true,
+    "rewriteRelativeImportExtensions": true
+    // "noEmit": false,
+    // "emitDeclarationOnly": true,
   },
   "include": ["static/ts/**/*"],
   "exclude": ["static/js/**/*", "src/**/*", "node_modules"]
