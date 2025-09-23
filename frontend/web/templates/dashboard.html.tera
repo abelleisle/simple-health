@@ -41,9 +41,9 @@
             />
         </div>
 
-        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <div class="grid gap-6 md:grid-cols-3">
             <!-- Calorie Progress Card -->
-            <div class="bg-white p-6 rounded-lg shadow col-span-full lg:col-span-2">
+            <div class="bg-white p-6 rounded-lg shadow col-span-full md:col-span-2">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Daily Progress</h2>
                 <div class="flex items-center justify-between mb-4">
                     <div>
@@ -65,7 +65,7 @@
             </div>
 
             <!-- Quick Add Card -->
-            <div class="bg-white p-6 rounded-lg shadow">
+            <div class="bg-white p-6 rounded-lg shadow md:col-span-1">
                 <h2 class="text-lg font-semibold text-gray-900 mb-4">Quick Add</h2>
                 <div class="space-y-3">
                     <button

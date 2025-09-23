@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "build-ts": "tsc && tailwindcss --output static/css/styles.css",
     "watch-ts": "tsc --watch",
-    "watch-tw": "tailwindcss --watch --output static/css/styles.css"
+    "watch-tw": "tailwindcss --watch=always --output static/css/styles.css"
   },
   "devDependencies": {
     "tailwindcss": "^4.1.12",
