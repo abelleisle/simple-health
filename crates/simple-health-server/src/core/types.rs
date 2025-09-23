@@ -7,6 +7,7 @@ use uuid::Uuid;
 mod activity;
 mod goal;
 mod meal;
+mod settings;
 mod user;
 
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
@@ -15,13 +16,15 @@ pub struct Signup {
     pub name: String,
     pub email: String,
     pub password: String,
+    pub goals: Option<Goal>,
     pub settings: Option<UserSetting>,
 }
 
-#[derive(Clone, Debug, Serialize, Deserialize, TS)]
+#[derive(FromRow, Clone, Debug, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct UserSetting {
-    pub calorie_goal: Option<i32>,
+    pub timezone: String,
+    pub darkmode: bool,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, TS)]
@@ -39,14 +42,13 @@ pub struct User {
     pub name: String,
 }
 
-#[derive(FromRow, Clone, Debug, Deserialize, TS)]
+#[derive(FromRow, Clone, Debug, Serialize, Deserialize, TS)]
 #[ts(export)]
 pub struct Goal {
-    pub id: Uuid,
     pub user_id: Uuid,
     pub consumed: i32,
     pub burned: i32,
-    pub created_at: DateTime<Utc>,
+    pub active_time_s: Option<i32>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, TS)]
