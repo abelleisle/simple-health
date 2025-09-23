@@ -73,7 +73,20 @@ in {
   # env.LD_LIBRARY_PATH = libPath;
 
   # https://devenv.sh/processes/
-  # processes.cargo-watch.exec = "cargo-watch";
+  processes = {
+    tailwind = {
+      exec = "bun watch-tw";
+      cwd = "./frontend/web";
+    };
+    typescript = {
+      exec = "bun watch-ts";
+      cwd = "./frontend/web";
+    };
+    server = {
+      # exec = "watchexec -e rs,js,css,tera -r cargo run --bin simple-health-server";
+      exec = "watchexec -e rs,tera -r cargo run --bin simple-health-server";
+    };
+  };
 
   # https://devenv.sh/services/
   services = {
