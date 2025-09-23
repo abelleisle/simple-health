@@ -1,6 +1,7 @@
 use crate::auth::{
     authenticate::JWT_SIGNING_KEY,
     cookie::default_cookie,
+    cookie::settings as SettingsCookie,
     jwt::{Claims, generate_jwt, validate_jwt},
 };
 use crate::core::types::{User, UserSetting};
@@ -19,13 +20,14 @@ pub async fn base(
     let mut jar = CookieJar::from_headers(request.headers());
     let jwt = jar.get("jwt");
     let refresh = jar.get("refresh");
+    let settings = SettingsCookie::get(&jar);
 
     // Default context for unauthenticated requests
     let mut context = UserContext {
         user: None,
         is_admin: false,
         error: None,
-        settings: UserSetting::default(),
+        settings: settings.clone().unwrap_or(UserSetting::default()),
     };
 
     // JWT takes precedence if present
@@ -66,6 +68,20 @@ pub async fn base(
 
             context.user = Some(user);
         }
+    }
+
+    // If the user didn't pass a valid settings cookie, we should add the settings cookie to their
+    // jar
+    if settings.is_none()
+        && let Some(ref user) = context.user
+    {
+        // TODO don't panic here, log the error
+        let settings = UserSetting::get_or_default(app.db.get_pool(), &user)
+            .await
+            .unwrap();
+        let sc = SettingsCookie::set(settings).unwrap();
+
+        jar = jar.add(sc);
     }
 
     // Inject the resolved context into request extensions
