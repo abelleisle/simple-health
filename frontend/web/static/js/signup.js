@@ -19,14 +19,20 @@ document.addEventListener("DOMContentLoaded", function () {
             const email = formData.get("email");
             const password = formData.get("password");
             const calorieGoal = parseInt(formData.get("calorie_goal"), 10);
+            const activeCalories = parseInt(formData.get("active_calories"), 10);
+            const activeMinutes = parseInt(formData.get("active_minutes"), 10);
             // Create signup object
             const signupData = {
                 name,
                 email,
                 password,
-                settings: {
-                    calorie_goal: calorieGoal || null,
+                goals: {
+                    user_id: "", // Will be filled by the server
+                    consumed: calorieGoal || 2000,
+                    burned: activeCalories || 500,
+                    active_time_s: activeMinutes ? activeMinutes * 60 : null, // Convert minutes to seconds
                 },
+                settings: null,
             };
             try {
                 const response = await fetch("/api/v1/signup", {

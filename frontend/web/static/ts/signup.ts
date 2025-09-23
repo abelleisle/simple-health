@@ -35,15 +35,27 @@ document.addEventListener("DOMContentLoaded", function (): void {
           formData.get("calorie_goal") as string,
           10,
         );
+        const activeCalories = parseInt(
+          formData.get("active_calories") as string,
+          10,
+        );
+        const activeMinutes = parseInt(
+          formData.get("active_minutes") as string,
+          10,
+        );
 
         // Create signup object
         const signupData: Signup = {
           name,
           email,
           password,
-          settings: {
-            calorie_goal: calorieGoal || null,
+          goals: {
+            user_id: "", // Will be filled by the server
+            consumed: calorieGoal || 2000,
+            burned: activeCalories || 500,
+            active_time_s: activeMinutes ? activeMinutes * 60 : null, // Convert minutes to seconds
           },
+          settings: null,
         };
 
         try {

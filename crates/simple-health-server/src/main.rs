@@ -13,13 +13,14 @@ use std::sync::{Arc, RwLock};
 use tower_http::cors::Any;
 use tower_http::cors::CorsLayer;
 
-use core::types::User;
+use core::types::{User, UserSetting};
 
 #[derive(Clone)]
 pub struct UserContext {
     user: Option<User>,
     is_admin: bool,
     error: Option<String>,
+    settings: UserSetting,
 }
 
 #[derive(Clone)]

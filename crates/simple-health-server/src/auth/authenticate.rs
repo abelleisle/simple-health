@@ -90,7 +90,7 @@ pub async fn signup(
     };
 
     // There is no existing user, let's create one!
-    let user = match User::new(app.db.get_pool(), &signup).await {
+    let user = match User::create(app.db.get_pool(), &signup).await {
         Ok(user) => user,
         Err(e) => {
             log::error!("Error creating user {}: {}", signup.email, e);

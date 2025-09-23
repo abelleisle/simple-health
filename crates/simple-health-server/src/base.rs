@@ -3,7 +3,7 @@ use crate::auth::{
     cookie::default_cookie,
     jwt::{Claims, generate_jwt, validate_jwt},
 };
-use crate::core::types::User;
+use crate::core::types::{User, UserSetting};
 use crate::session::RefreshToken;
 use crate::{ServerState, UserContext};
 use axum::extract::Request;
@@ -25,6 +25,7 @@ pub async fn base(
         user: None,
         is_admin: false,
         error: None,
+        settings: UserSetting::default(),
     };
 
     // JWT takes precedence if present

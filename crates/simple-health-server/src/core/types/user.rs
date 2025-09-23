@@ -4,10 +4,22 @@ use crate::db;
 use sqlx::Row;
 use uuid::Uuid;
 
-use crate::core::types::{Signin, Signup, User};
+use crate::core::types::{Goal, Signin, Signup, User, UserSetting};
 
 impl User {
-    pub async fn new(pool: &db::DBPool, signup: &Signup) -> Result<User, sqlx::Error> {
+    pub async fn create(pool: &db::DBPool, signup: &Signup) -> Result<User, sqlx::Error> {
+        let user = Self::new(pool, signup).await?;
+
+        let goal = signup.goals.clone().unwrap_or(Goal::default(&user));
+        let _ = Goal::new(pool, &goal).await?;
+
+        let settings = signup.settings.clone().unwrap_or(UserSetting::default());
+        let _ = UserSetting::new(pool, &user, &settings).await?;
+
+        return Ok(user);
+    }
+
+    async fn new(pool: &db::DBPool, signup: &Signup) -> Result<User, sqlx::Error> {
         let password_hash = crypto::password::hash(&signup.password).map_err(|e| {
             log::error!("Unable to hash user {} password: {}", signup.email, e);
             return sqlx::Error::BeginFailed;

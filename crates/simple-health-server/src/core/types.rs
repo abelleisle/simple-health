@@ -46,8 +46,8 @@ pub struct User {
 #[ts(export)]
 pub struct Goal {
     pub user_id: Uuid,
-    pub consumed: i32,
-    pub burned: i32,
+    pub consumed: Option<i32>,
+    pub burned: Option<i32>,
     pub active_time_s: Option<i32>,
 }
 
