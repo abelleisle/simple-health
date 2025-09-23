@@ -62,6 +62,23 @@
                         style="width: {{ stats.progress_bar }}%"
                     ></div>
                 </div>
+
+                <!-- Meal Breakdown Bar -->
+                <div class="flex w-full bg-gray-200 rounded-full h-3 mt-2 overflow-hidden">
+                    {% if stats.consumed_calories > 0 %}
+                        {% set breakfast_pct = stats.meal_breakdown.breakfast / stats.consumed_calories * 100 %}
+                        {% set lunch_pct = stats.meal_breakdown.lunch / stats.consumed_calories * 100 %}
+                        {% set dinner_pct = stats.meal_breakdown.dinner / stats.consumed_calories * 100 %}
+                        {% set snack_pct = stats.meal_breakdown.snack / stats.consumed_calories * 100 %}
+                        {% set coffee_pct = stats.meal_breakdown.coffee / stats.consumed_calories * 100 %}
+
+                        {% if breakfast_pct > 0 %}<div class="bg-orange-400 relative group" style="width: {{ breakfast_pct }}%" title="Breakfast: {{ stats.meal_breakdown.breakfast }} cal ( {{ breakfast_pct }} %)"></div>{% endif %}
+                        {% if lunch_pct > 0 %}<div class="bg-green-400 relative group" style="width: {{ lunch_pct }}%" title="Lunch: {{ stats.meal_breakdown.lunch }} cal ({{ lunch_pct }}%)"></div>{% endif %}
+                        {% if dinner_pct > 0 %}<div class="bg-purple-400 relative group" style="width: {{ dinner_pct }}%" title="Dinner: {{ stats.meal_breakdown.dinner }} cal ({{ dinner_pct }}%)"></div>{% endif %}
+                        {% if snack_pct > 0 %}<div class="bg-pink-400 relative group" style="width: {{ snack_pct }}%" title="Snack: {{ stats.meal_breakdown.snack }} cal ({{ snack_pct }}%)"></div>{% endif %}
+                        {% if coffee_pct > 0 %}<div class="bg-amber-600 relative group" style="width: {{ coffee_pct }}%" title="Coffee: {{ stats.meal_breakdown.coffee }} cal ({{ coffee_pct }}%)"></div>{% endif %}
+                    {% endif %}
+                </div>
             </div>
 
             <!-- Quick Add Card -->
