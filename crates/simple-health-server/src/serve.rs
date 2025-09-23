@@ -7,6 +7,7 @@ use axum::{
     routing::{get, post},
 };
 use chrono::{Local, NaiveDate, TimeZone, Utc};
+use chrono_tz::Tz;
 use serde::Deserialize;
 use std::collections::HashMap;
 use tera::{Context, Tera};
@@ -62,20 +63,26 @@ async fn dashboard(
     user.insert("calorie_goal", goal.to_string());
     context.insert("user", &user);
 
+    // Get user's timezone, fallback to UTC if invalid
+    let user_timezone: Tz = ctx.settings.timezone.parse().unwrap_or(chrono_tz::UTC);
+
     // Parse the selected date and convert to UTC date range
-    let current_date = chrono::Local::now().format("%Y-%m-%d").to_string();
+    let current_date = Utc::now()
+        .with_timezone(&user_timezone)
+        .format("%Y-%m-%d")
+        .to_string();
     let selected_date = query.date.unwrap_or_else(|| current_date.clone());
 
     // Parse the selected date string
     let selected_naive_date = NaiveDate::parse_from_str(&selected_date, "%Y-%m-%d")
         .map_err(|_| StatusCode::BAD_REQUEST)?;
 
-    // Create start and end times for the selected date in local timezone
-    let start_of_day_local = Local
+    // Create start and end times for the selected date in user's timezone
+    let start_of_day_local = user_timezone
         .from_local_datetime(&selected_naive_date.and_hms_opt(0, 0, 0).unwrap())
         .single()
         .ok_or(StatusCode::BAD_REQUEST)?;
-    let end_of_day_local = Local
+    let end_of_day_local = user_timezone
         .from_local_datetime(&selected_naive_date.and_hms_opt(23, 59, 59).unwrap())
         .single()
         .ok_or(StatusCode::BAD_REQUEST)?;
