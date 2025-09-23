@@ -41,4 +41,24 @@ impl UserSetting {
             None => Ok(Self::default()),
         }
     }
+
+    pub async fn update(
+        pool: &db::DBPool,
+        user: &User,
+        settings: &UserSetting,
+    ) -> Result<(), sqlx::Error> {
+        sqlx::query(
+            "INSERT INTO user_settings (user_id, timezone, darkmode) VALUES ($1, $2, $3)
+            ON CONFLICT (user_id) DO UPDATE SET
+                timezone = EXCLUDED.timezone,
+                darkmode = EXCLUDED.darkmode",
+        )
+        .bind(user.id)
+        .bind(&settings.timezone)
+        .bind(&settings.darkmode)
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
 }

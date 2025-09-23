@@ -14,7 +14,7 @@ use tera::{Context, Tera};
 use tower_http::services::ServeDir;
 
 use crate::auth::{authenticate::signout, required_auth};
-use crate::core::types::{Activity, Goal, Meal};
+use crate::core::types::{Activity, Goal, Meal, UserSetting};
 use crate::{ServerState, UserContext};
 
 #[derive(Deserialize)]
@@ -34,6 +34,7 @@ pub fn get_routes(state: ServerState) -> Router<ServerState> {
 
     Router::new()
         .route("/", get(dashboard))
+        .route("/profile", get(profile))
         .layer(middleware::from_fn_with_state(state, required_auth))
         .route("/login", get(login))
         .route("/signup", get(signup))
@@ -101,6 +102,9 @@ async fn dashboard(
     // Convert to UTC for database queries
     let start_of_day_utc = start_of_day_local.with_timezone(&Utc);
     let end_of_day_utc = end_of_day_local.with_timezone(&Utc);
+
+    log::info!("Start UTC: {}", start_of_day_utc);
+    log::info!("End UTC: {}", end_of_day_utc);
 
     // Get the latest goal given the current date
     let goal = Goal::latest(
@@ -331,4 +335,48 @@ async fn signup(
     });
 
     Html(rendered).into_response()
+}
+
+async fn profile(
+    State(state): State<ServerState>,
+    Extension(ctx): Extension<UserContext>,
+    Extension(tera): Extension<Tera>,
+) -> Result<Html<String>, StatusCode> {
+    let mut context = Context::new();
+
+    let user = ctx.user.as_ref().unwrap();
+
+    // Get user's current settings
+    let settings = &ctx.settings;
+    context.insert("settings", settings);
+
+    // Get user's current goals
+    let user_timezone: Tz = settings.timezone.parse().unwrap_or(chrono_tz::UTC);
+    let current_time = Utc::now();
+
+    let goals = Goal::latest(state.db.get_pool(), user, current_time)
+        .await
+        .map_err(|e| {
+            log::error!("Unable to fetch latest goal for user {}: {}", user.id, e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        })?;
+
+    // Convert active_time_s to minutes for display
+    let active_minutes = goals.active_time_s.map(|s| s / 60);
+
+    context.insert(
+        "goals",
+        &serde_json::json!({
+            "consumed": goals.calories_consumed,
+            "burned": goals.calories_burned,
+            "active_minutes": active_minutes
+        }),
+    );
+
+    let rendered = tera.render("profile.html.tera", &context).map_err(|e| {
+        log::error!("Error rendering profile: {}", e);
+        StatusCode::INTERNAL_SERVER_ERROR
+    })?;
+
+    Ok(Html(rendered))
 }

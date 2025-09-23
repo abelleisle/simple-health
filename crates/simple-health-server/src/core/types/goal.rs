@@ -11,8 +11,8 @@ impl Goal {
     pub fn default(user: &User) -> Self {
         Goal {
             user_id: user.id,
-            consumed: Some(Self::DEFAULT_CONSUMED),
-            burned: Some(Self::DEFAULT_BURNED),
+            calories_consumed: Some(Self::DEFAULT_CONSUMED),
+            calories_burned: Some(Self::DEFAULT_BURNED),
             active_time_s: Some(Self::DEFAULT_ACTIVE_TIME_S),
         }
     }
@@ -23,8 +23,8 @@ impl Goal {
             RETURNING user_id, calories_consumed, calories_burned, active_time_s",
         )
         .bind(goal.user_id)
-        .bind(goal.consumed)
-        .bind(goal.burned)
+        .bind(goal.calories_consumed)
+        .bind(goal.calories_burned)
         .bind(goal.active_time_s)
         .fetch_one(pool)
         .await
@@ -71,11 +71,11 @@ impl Goal {
     }
 
     pub fn get_consumed(&self) -> i32 {
-        self.consumed.unwrap_or(Self::DEFAULT_CONSUMED)
+        self.calories_consumed.unwrap_or(Self::DEFAULT_CONSUMED)
     }
 
     pub fn get_burned(&self) -> i32 {
-        self.burned.unwrap_or(Self::DEFAULT_BURNED)
+        self.calories_burned.unwrap_or(Self::DEFAULT_BURNED)
     }
 
     pub fn get_active_time(&self) -> i32 {

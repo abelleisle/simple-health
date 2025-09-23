@@ -11,11 +11,17 @@
                     <h1 class="text-3xl font-bold text-gray-900">Simple Health</h1>
                     <p class="text-sm text-gray-600">Welcome back, {{ user.name }}!</p>
                 </div>
-                <form method="post" action="/signout">
-                    <button type="submit" class="px-4 py-2 text-sm text-red-600 hover:text-red-800 font-medium">
-                        Sign Out
-                    </button>
-                </form>
+
+                <div class="flex space-x-4">
+                    <a href="/profile" class="px-4 py-2 text-sm text-blue-600 hover:text-blue-800 font-medium">
+                        Profile
+                    </a>
+                  <form method="post" action="/signout">
+                      <button type="submit" class="px-4 py-2 text-sm text-red-600 hover:text-red-800 font-medium">
+                          Sign Out
+                      </button>
+                  </form>
+                </div>
             </div>
         </div>
     </header>

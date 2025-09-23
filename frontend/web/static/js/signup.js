@@ -28,8 +28,8 @@ document.addEventListener("DOMContentLoaded", function () {
                 password,
                 goals: {
                     user_id: "", // Will be filled by the server
-                    consumed: calorieGoal || 2000,
-                    burned: activeCalories || 500,
+                    calories_consumed: calorieGoal || 2000,
+                    calories_burned: activeCalories || 500,
                     active_time_s: activeMinutes ? activeMinutes * 60 : null, // Convert minutes to seconds
                 },
                 settings: null,

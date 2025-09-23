@@ -2,7 +2,7 @@
 
 export type Goal = {
   user_id: string;
-  consumed: number;
-  burned: number;
+  calories_consumed: number | null;
+  calories_burned: number | null;
   active_time_s: number | null;
 };
