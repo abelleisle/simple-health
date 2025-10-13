@@ -1,6 +1,6 @@
 # Simple Health Frontend
 
-Static HTML templates with minimal JavaScript, designed to be served by Axum with Tera templating.
+Static HTML templates with TypeScript, designed to be served by Axum with Tera templating.
 
 ## Structure
 
@@ -8,25 +8,42 @@ Static HTML templates with minimal JavaScript, designed to be served by Axum wit
 templates/
 ├── base.html.tera          # Base layout template
 ├── dashboard.html.tera     # Main dashboard page
-└── login.html.tera         # Login page
+├── login.html.tera         # Login page
+├── signup.html.tera        # User registration page
+└── profile.html.tera       # User settings and goals
 
 static/
 ├── css/
-│   └── styles.css         # Tailwind CSS with custom styles
-├── js/
-│   ├── dashboard.js       # Dashboard interactions (modal, date picker)
-│   └── login.js          # Login form handling
+│   └── styles.css         # Tailwind CSS v4.1 with custom styles
+├── ts/
+│   ├── dashboard.ts       # Dashboard interactions (modals, date picker)
+│   ├── login.ts          # Login form handling
+│   ├── signup.ts         # Signup form handling
+│   ├── profile.ts        # Profile settings and goals management
+│   ├── utils.ts          # Shared utilities (timezone, cookies, UUID)
+│   └── types.ts          # TypeScript type exports from Rust bindings
+├── js/                    # Compiled JavaScript from TypeScript
 └── assets/
     └── (static assets like icons, images)
 ```
 
-## Key Changes from TypeScript SPA
+## Development
 
-1. **No Build Process**: Raw HTML templates served directly by Axum
-2. **Minimal JavaScript**: Only essential DOM interactions and form handling
+Uses **Bun** as the runtime and package manager:
+
+- `bun run dev` - Start development server with hot reload
+- `bun run build-ts` - Compile TypeScript to JavaScript
+- `bun run build-tw` - Build Tailwind CSS
+- `bun run watch-ts` - Watch TypeScript files for changes
+- `bun run watch-tw` - Watch CSS files for changes
+
+## Key Features
+
+1. **TypeScript with Type Safety**: Uses Rust-generated type bindings via ts-rs
+2. **Timezone Support**: Client-side timezone utilities with server-side timezone handling
 3. **Server-Side Rendering**: All data comes from Tera template context
-4. **Form Submissions**: Standard HTML forms posting to server endpoints
-5. **No State Management**: State is managed server-side
+4. **Form Submissions**: AJAX form submissions with proper error handling
+5. **Cookie-based Settings**: User preferences stored in HTTP-only cookies
 
 ## Tera Template Context
 
@@ -81,23 +98,26 @@ Expected context variables:
 
 ## Required Server Endpoints
 
+### Pages
+
 - `GET /` - Dashboard page
 - `GET /login` - Login page
-- `POST /login` - Handle login form
-- `POST /logout` - Handle logout
-- `POST /add-food` - Add food entry
-- `GET /static/*` - Serve static assets
+- `GET /signup` - Signup page
+- `GET /profile` - Profile settings page
+- `POST /signout` - Handle logout
 
-## CSS Processing
+### API
 
-The Tailwind CSS can be processed either:
+- `POST /api/v1/login` - Handle login form
+- `POST /api/v1/signup` - Handle user registration
+- `POST /api/v1/meal` - Add meal entry
+- `POST /api/v1/activity` - Add activity entry
+- `POST /api/v1/settings` - Update user settings
+- `POST /api/v1/goals` - Update user goals
+- `GET /api/v1/health` - Health check
 
-1. At build time with Tailwind CLI
-2. At runtime by Axum (if you set up Tailwind processing)
-3. Use a CDN version for development
+### Static
 
-For production, pre-compile the CSS:
-
-```bash
-npx tailwindcss -i static/css/styles.css -o static/css/compiled.css --watch
-```
+- `GET /static/css/*` - Serve CSS files
+- `GET /static/js/*` - Serve JavaScript files
+- `GET /static/assets/*` - Serve static assets
