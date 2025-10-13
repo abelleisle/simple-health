@@ -61,6 +61,12 @@ impl ServerState {
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     std_logger::Config::logfmt().init();
 
+    if utils::dev::is_debug_version() {
+        log::warn!("You're running a debug version, performance may be degraded :(");
+    }
+
+    log::info!("Starting simple-health server");
+
     let db = db::DatabaseConnection::connect().await.map_err(|e| {
         log::error!("Failed to connect to database: {}", e);
         e

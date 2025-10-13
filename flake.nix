@@ -42,8 +42,80 @@
         # module parameters provide easy access to attributes of the same
         # system.
 
-        # Equivalent to  inputs'.nixpkgs.legacyPackages.hello;
-        # packages.default = pkgs.hello;
+        packages.simple-health = let
+          boringssl-wrapper = pkgs.runCommand "boringssl-wrapper" {} ''
+            mkdir $out
+            cd $out
+            ln -s ${pkgs.boringssl.out}/lib build
+            ln -s ${pkgs.boringssl.dev}/include include
+          '';
+        in
+          pkgs.rustPlatform.buildRustPackage {
+            pname = "simple-health";
+            version = "0.1.0";
+
+            src = ./.;
+
+            cargoLock = {
+              lockFile = ./Cargo.lock;
+            };
+
+            nativeBuildInputs = with pkgs; [
+              # Frontend
+              tailwindcss_4
+              typescript
+
+              # Backend
+              pkg-config
+              cmake
+              perl
+              clang
+              go
+              nasm
+              python3
+              llvmPackages.libclang
+            ];
+
+            buildInputs = with pkgs; [
+              openssl
+            ];
+
+            env = {
+              RUST_BACKTRACE = "full";
+              LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
+              BORING_BSSL_PATH = "${boringssl-wrapper}";
+
+              # Guess we don't need these
+              # OPENSSL_DIR = "${pkgs.openssl.dev}";
+              # OPENSSL_LIB_DIR = "${pkgs.openssl.out}/lib";
+              # BORING_BSSL_PATH = "${pkgs.boringssl}/lib";
+              # BORING_BSSL_INCLUDE_PATH = "${pkgs.boringssl.dev}/include";
+            };
+
+            preBuild = ''
+              # Build the frontend TypeScript and Tailwind CSS
+              cd frontend/web
+              tsc
+              tailwindcss --output static/css/styles.css
+              # bun install --frozen-lockfile
+              # bun run build-ts
+              cd ../..
+            '';
+
+            postInstall = ''
+              # Copy the static assets to the share directory
+              mkdir -p $out/share/simple-health
+              cp -r frontend/web/static $out/share/simple-health/
+              cp -r frontend/web/templates $out/share/simple-health/
+            '';
+
+            meta = with pkgs.lib; {
+              description = "Simple Health application";
+              platforms = platforms.all;
+            };
+          };
+
+        packages.default = self'.packages.simple-health;
 
         devenv.shells.default = {
           imports = [

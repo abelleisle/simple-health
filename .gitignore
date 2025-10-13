@@ -2,6 +2,9 @@
 .devenv*
 devenv.local.nix
 
+# Nix
+result
+
 # direnv
 .direnv
 

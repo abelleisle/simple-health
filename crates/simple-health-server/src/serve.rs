@@ -15,6 +15,7 @@ use tower_http::services::ServeDir;
 
 use crate::auth::{authenticate::signout, required_auth};
 use crate::core::types::{Activity, Goal, Meal, UserSetting};
+use crate::utils;
 use crate::{ServerState, UserContext};
 
 #[derive(Deserialize)]
@@ -28,7 +29,18 @@ struct DashboardQuery {
 }
 
 pub fn get_routes(state: ServerState) -> Router<ServerState> {
-    let mut tera = Tera::new("frontend/web/templates/**/*").expect("Failed to initialize Tera");
+    // Get dynamic paths for templates and static files
+    let templates_dir = utils::get_templates_dir();
+    let static_dir = utils::get_static_files_dir();
+
+    // Construct Tera template pattern
+    let template_pattern = templates_dir
+        .join("**/*")
+        .to_str()
+        .expect("Failed to construct template pattern")
+        .to_string();
+
+    let mut tera = Tera::new(&template_pattern).expect("Failed to initialize Tera");
 
     tera.autoescape_on(vec!["html", "htm"]);
 
@@ -39,12 +51,9 @@ pub fn get_routes(state: ServerState) -> Router<ServerState> {
         .route("/login", get(login))
         .route("/signup", get(signup))
         .route("/signout", post(signout))
-        .nest_service("/static/css", ServeDir::new("frontend/web/static/css"))
-        .nest_service("/static/js", ServeDir::new("frontend/web/static/js"))
-        .nest_service(
-            "/static/assets",
-            ServeDir::new("frontend/web/static/assets"),
-        )
+        .nest_service("/static/css", ServeDir::new(static_dir.join("css")))
+        .nest_service("/static/js", ServeDir::new(static_dir.join("js")))
+        .nest_service("/static/assets", ServeDir::new(static_dir.join("assets")))
         .layer(Extension(tera))
 }
 
@@ -75,16 +84,16 @@ async fn dashboard(
     let selected_date_tz_str = query.date.unwrap_or_else(|| current_date_tz_str.clone());
     let selected_naive_date = NaiveDate::parse_from_str(&selected_date_tz_str, "%Y-%m-%d")
         .map_err(|_| StatusCode::BAD_REQUEST)?;
-    let selected_date_tz = user_timezone
-        .from_local_datetime(&selected_naive_date.and_hms_opt(23, 59, 59).unwrap())
-        .single()
-        .ok_or(StatusCode::BAD_REQUEST)?;
-    let selected_date_utc = selected_date_tz.with_timezone(&Utc);
+    // let selected_date_tz = user_timezone
+    //     .from_local_datetime(&selected_naive_date.and_hms_opt(23, 59, 59).unwrap())
+    //     .single()
+    //     .ok_or(StatusCode::BAD_REQUEST)?;
+    // let selected_date_utc = selected_date_tz.with_timezone(&Utc);
 
-    log::info!("Current date: {}", current_date_tz);
-    log::info!("Selected date: {}", selected_date_tz);
-    log::info!("Current date (UTC): {}", current_date_utc);
-    log::info!("Selected date (UTC): {}", selected_date_utc);
+    // log::info!("Current date: {}", current_date_tz);
+    // log::info!("Selected date: {}", selected_date_tz);
+    // log::info!("Current date (UTC): {}", current_date_utc);
+    // log::info!("Selected date (UTC): {}", selected_date_utc);
 
     // Create start and end times for the selected date in user's timezone
     let start_of_day_local = user_timezone
@@ -96,15 +105,15 @@ async fn dashboard(
         .single()
         .ok_or(StatusCode::BAD_REQUEST)?;
 
-    log::info!("Start local: {}", start_of_day_local);
-    log::info!("End local: {}", end_of_day_local);
+    // log::info!("Start local: {}", start_of_day_local);
+    // log::info!("End local: {}", end_of_day_local);
 
     // Convert to UTC for database queries
     let start_of_day_utc = start_of_day_local.with_timezone(&Utc);
     let end_of_day_utc = end_of_day_local.with_timezone(&Utc);
 
-    log::info!("Start UTC: {}", start_of_day_utc);
-    log::info!("End UTC: {}", end_of_day_utc);
+    // log::info!("Start UTC: {}", start_of_day_utc);
+    // log::info!("End UTC: {}", end_of_day_utc);
 
     // Get the latest goal given the current date
     let goal = Goal::latest(
