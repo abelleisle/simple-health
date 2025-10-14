@@ -46,7 +46,7 @@
   };
 
   env = {
-    DATABASE_URL = "postgres://gym:membership@localhost/health";
+    POSTGRES_URL = "postgres://gym:membership@localhost/health";
     LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
   };
 
