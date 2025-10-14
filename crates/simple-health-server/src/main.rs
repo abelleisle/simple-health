@@ -112,8 +112,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     let app = create_app(state);
 
-    let addr = "0.0.0.0:3000";
-    let listener = tokio::net::TcpListener::bind(addr).await.map_err(|e| {
+    let host = std::env::var("SIMPLE_HEALTH_ADDR").unwrap_or_else(|_| "localhost".to_string());
+    let port = std::env::var("SIMPLE_HEALTH_PORT").unwrap_or_else(|_| "3000".to_string());
+    let addr = format!("{}:{}", host, port);
+
+    let listener = tokio::net::TcpListener::bind(&addr).await.map_err(|e| {
         log::warn!("Failed to bind backend address: {e}");
         e
     })?;

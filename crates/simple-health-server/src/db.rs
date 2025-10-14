@@ -9,8 +9,8 @@ pub struct DatabaseConnection {
 
 impl DatabaseConnection {
     pub async fn connect() -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
-        let database_url =
-            std::env::var("POSTGRES_URL").expect("`POSTGRES_URL` database variable not provided.`");
+        let database_url = std::env::var("SIMPLE_HEALTH_PG_URL")
+            .expect("`SIMPLE_HEALTH_PG_URL` database variable not provided.`");
 
         let pool = PgPool::connect(&database_url).await?;
 
