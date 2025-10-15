@@ -47,6 +47,7 @@
 
   env = {
     SIMPLE_HEALTH_PG_URL = "postgres://gym:membership@localhost/health";
+    SIMPLE_HEALTH_JWT_SECRET = "supersecretjwtkey";
     LIBCLANG_PATH = "${pkgs.llvmPackages.libclang.lib}/lib";
   };
 

@@ -1,9 +1,9 @@
 use crate::auth::{
-    authenticate::JWT_SIGNING_KEY,
     cookie::default_cookie,
     cookie::settings as SettingsCookie,
     jwt::{Claims, generate_jwt, validate_jwt},
 };
+use crate::config;
 use crate::core::types::{User, UserSetting};
 use crate::session::RefreshToken;
 use crate::{ServerState, UserContext};
@@ -32,7 +32,7 @@ pub async fn base(
 
     // JWT takes precedence if present
     if let Some(jwt) = jwt {
-        match validate_jwt::<Claims>(JWT_SIGNING_KEY, jwt.value()) {
+        match validate_jwt::<Claims>(&config::get_config().jwt_secret, jwt.value()) {
             Ok(claims) => {
                 log::trace!("User ID from JWT {}", claims.user_id);
                 let user = User::get(app.db.get_pool(), Some(claims.user_id), None).await;
@@ -59,7 +59,7 @@ pub async fn base(
         {
             // if let Ok(Some(user)) = db::refresh_tokens::get_user(&app.pg_pool, refresh.value()).await {
             let claims = Claims::with(&user);
-            if let Ok(jwt) = generate_jwt(JWT_SIGNING_KEY, claims) {
+            if let Ok(jwt) = generate_jwt(&config::get_config().jwt_secret, claims) {
                 jar = jar.add(default_cookie("jwt", jwt, 1));
             }
             // Note: JWT generation errors are intentionally swallowed here

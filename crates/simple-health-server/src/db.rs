@@ -1,5 +1,7 @@
 use sqlx::{Executor, PgPool, Row};
 
+use crate::config;
+
 pub type DBPool = PgPool;
 
 #[derive(Clone)]
@@ -9,10 +11,9 @@ pub struct DatabaseConnection {
 
 impl DatabaseConnection {
     pub async fn connect() -> Result<Self, Box<dyn std::error::Error + Send + Sync>> {
-        let database_url = std::env::var("SIMPLE_HEALTH_PG_URL")
-            .expect("`SIMPLE_HEALTH_PG_URL` database variable not provided.`");
+        let database_url = &config::get_config().database_url;
 
-        let pool = PgPool::connect(&database_url).await?;
+        let pool = PgPool::connect(database_url).await?;
 
         log::info!("Connected to db");
 

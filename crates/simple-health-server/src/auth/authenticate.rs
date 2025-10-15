@@ -8,11 +8,10 @@ use axum_extra::extract::cookie::{Cookie, CookieJar};
 use serde::Deserialize;
 
 use crate::auth::{cookie::default_cookie, jwt, jwt::Claims};
+use crate::config;
 use crate::core::types::{Signin, Signup, User};
 use crate::session::RefreshToken;
 use crate::{ServerState, UserContext};
-
-pub const JWT_SIGNING_KEY: &str = "supersecretsigningkey";
 
 #[axum::debug_handler]
 pub async fn login(
@@ -50,7 +49,7 @@ pub async fn login(
     };
 
     let claims = Claims::with(&user);
-    match jwt::generate_jwt(JWT_SIGNING_KEY, claims) {
+    match jwt::generate_jwt(&config::get_config().jwt_secret, claims) {
         Ok(token) => (
             jar.add(default_cookie("jwt", token, 1)).add(default_cookie(
                 "refresh",
@@ -115,7 +114,7 @@ pub async fn signup(
 
     // Create a new JWT token
     let claims = Claims::with(&user);
-    let resp = match jwt::generate_jwt(JWT_SIGNING_KEY, claims) {
+    let resp = match jwt::generate_jwt(&config::get_config().jwt_secret, claims) {
         Ok(token) => (
             jar.add(default_cookie("jwt", token, 1)).add(default_cookie(
                 "refresh",
@@ -169,7 +168,7 @@ pub async fn refresh_token(
 
     // set new jwt
     let claims = Claims::with(&user);
-    match jwt::generate_jwt(JWT_SIGNING_KEY, claims) {
+    match jwt::generate_jwt(&config::get_config().jwt_secret, claims) {
         Ok(token) => (
             jar.add(default_cookie("jwt", token, 1)),
             Redirect::to(&next.unwrap_or("/".to_owned())),

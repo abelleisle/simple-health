@@ -10,9 +10,8 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use uuid::Uuid;
 
 use crate::ServerState;
+use crate::config;
 use crate::core::types::User;
-
-const JWT_SIGNING_KEY: &str = "supersecretsigningkey";
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -57,7 +56,7 @@ where
     ) -> Result<Option<Self>, Self::Rejection> {
         let jar = CookieJar::from_headers(&req.headers);
         if let Some(jwt) = jar.get("jwt").map(|c| c.value()) {
-            return match validate_jwt::<T>(JWT_SIGNING_KEY, jwt) {
+            return match validate_jwt::<T>(&config::get_config().jwt_secret, jwt) {
                 Ok(data) => return Ok(Some(CookieJwt(data))),
                 // user tampered with cookie here, we want to delete that cookie
                 // returning None here would have been okay too if you're okay with
