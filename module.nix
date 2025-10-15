@@ -66,6 +66,16 @@ in {
       example = 8080;
       description = "The port on which the simple-health server will listen.";
     };
+
+    openFirewall = mkOption {
+      type = types.bool;
+      default = false;
+      example = true;
+      description = ''
+        Should the firewall port specified in `services.simple-health.port`
+        be exposed on the firewall?
+      '';
+    };
   };
 
   config = mkIf cfg.enable {
@@ -125,6 +135,10 @@ in {
 
     users.groups = mkIf (cfg.group == "simple-health") {
       simple-health = {};
+    };
+
+    networking.firewall = mkIf cfg.openFirewall {
+      allowedTCPPorts = [cfg.port];
     };
   };
 }
