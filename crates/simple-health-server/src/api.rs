@@ -4,19 +4,22 @@ use crate::core::types::{Activity, Goal, Meal, UserSetting};
 use crate::{ServerState, UserContext};
 use axum::{
     Extension, Router,
-    extract::{Request, State},
+    extract::{Path, Request, State},
     http::StatusCode,
     middleware,
     middleware::Next,
     response::{IntoResponse, Json},
-    routing::{get, post},
+    routing::{delete, get, post},
 };
 use axum_extra::extract::cookie::CookieJar;
+use uuid::Uuid;
 
 pub fn get_routes(state: ServerState) -> Router<ServerState> {
     Router::new()
         .route("/meal", post(meal))
+        .route("/meal/{id}", delete(delete_meal))
         .route("/activity", post(activity))
+        .route("/activity/{id}", delete(delete_activity))
         .route("/settings", post(settings))
         .route("/goals", post(goals))
         .layer(middleware::from_fn_with_state(state, required_auth_api))
@@ -138,4 +141,70 @@ pub async fn goals(
     });
 
     StatusCode::OK
+}
+
+pub async fn delete_meal(
+    State(app): State<ServerState>,
+    Extension(ctx): Extension<UserContext>,
+    Path(meal_id): Path<Uuid>,
+) -> impl IntoResponse {
+    if ctx.user.is_none() {
+        return StatusCode::UNAUTHORIZED;
+    }
+
+    let user = ctx.user.unwrap();
+    log::info!("Deleting meal {} for user {}", meal_id, user.id);
+
+    match Meal::delete(&user, meal_id, app.db.get_pool()).await {
+        Ok(rows_affected) => {
+            if rows_affected == 0 {
+                log::warn!(
+                    "Meal {} not found or user {} not authorized",
+                    meal_id,
+                    user.id
+                );
+                StatusCode::NOT_FOUND
+            } else {
+                log::info!("Successfully deleted meal {}", meal_id);
+                StatusCode::OK
+            }
+        }
+        Err(e) => {
+            log::error!("Unable to delete meal {}: {}", meal_id, e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
+}
+
+pub async fn delete_activity(
+    State(app): State<ServerState>,
+    Extension(ctx): Extension<UserContext>,
+    Path(activity_id): Path<Uuid>,
+) -> impl IntoResponse {
+    if ctx.user.is_none() {
+        return StatusCode::UNAUTHORIZED;
+    }
+
+    let user = ctx.user.unwrap();
+    log::info!("Deleting activity {} for user {}", activity_id, user.id);
+
+    match Activity::delete(&user, activity_id, app.db.get_pool()).await {
+        Ok(rows_affected) => {
+            if rows_affected == 0 {
+                log::warn!(
+                    "Activity {} not found or user {} not authorized",
+                    activity_id,
+                    user.id
+                );
+                StatusCode::NOT_FOUND
+            } else {
+                log::info!("Successfully deleted activity {}", activity_id);
+                StatusCode::OK
+            }
+        }
+        Err(e) => {
+            log::error!("Unable to delete activity {}: {}", activity_id, e);
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
 }

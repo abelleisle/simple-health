@@ -171,6 +171,7 @@ async fn dashboard(
         .iter()
         .map(|m| {
             let mut map: HashMap<&str, String> = HashMap::new();
+            map.insert("id", m.id.to_string());
             map.insert("name", m.description.clone());
             map.insert("type", m.name.clone());
             // Convert UTC timestamp to user's timezone and format as time only
@@ -186,6 +187,7 @@ async fn dashboard(
         .iter()
         .map(|a| {
             let mut map: HashMap<&str, String> = HashMap::new();
+            map.insert("id", a.id.to_string());
             map.insert("name", a.description.clone());
             map.insert("type", a.name.clone());
             // Convert UTC timestamp to user's timezone and format as time only

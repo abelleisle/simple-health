@@ -28,8 +28,8 @@ impl Meal {
         let end_date = end_date.unwrap_or_else(|| Utc::now());
 
         sqlx::query_as::<_, Meal>(
-            "SELECT id, user_id, name, description, calories, created_at FROM meals 
-             WHERE user_id = $1 AND created_at >= $2 AND created_at <= $3 
+            "SELECT id, user_id, name, description, calories, created_at FROM meals
+             WHERE user_id = $1 AND created_at >= $2 AND created_at <= $3
              ORDER BY created_at DESC",
         )
         .bind(user.id)
@@ -37,5 +37,19 @@ impl Meal {
         .bind(end_date)
         .fetch_all(pool)
         .await
+    }
+
+    pub async fn delete(
+        user: &User,
+        meal_id: uuid::Uuid,
+        pool: &db::DBPool,
+    ) -> Result<u64, sqlx::Error> {
+        let result = sqlx::query("DELETE FROM meals WHERE id = $1 AND user_id = $2")
+            .bind(meal_id)
+            .bind(user.id)
+            .execute(pool)
+            .await?;
+
+        Ok(result.rows_affected())
     }
 }

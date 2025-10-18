@@ -40,4 +40,18 @@ impl Activity {
         .fetch_all(pool)
         .await
     }
+
+    pub async fn delete(
+        user: &User,
+        activity_id: Uuid,
+        pool: &db::DBPool,
+    ) -> Result<u64, sqlx::Error> {
+        let result = sqlx::query("DELETE FROM activities WHERE id = $1 AND user_id = $2")
+            .bind(activity_id)
+            .bind(user.id)
+            .execute(pool)
+            .await?;
+
+        Ok(result.rows_affected())
+    }
 }

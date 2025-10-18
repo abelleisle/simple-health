@@ -1,4 +1,55 @@
 import { generateUUID, getCurrentDateTimeInUserTimezone, convertUserDateTimeToUTC, } from "./utils.js";
+// Delete meal function
+async function deleteMeal(mealId) {
+    if (!confirm("Are you sure you want to delete this meal entry?")) {
+        return;
+    }
+    try {
+        const response = await fetch(`/api/v1/meal/${mealId}`, {
+            method: "DELETE",
+        });
+        if (response.ok) {
+            window.location.reload();
+        }
+        else if (response.status === 404) {
+            alert("Meal entry not found or you don't have permission to delete it");
+        }
+        else {
+            alert("Failed to delete meal entry");
+        }
+    }
+    catch (error) {
+        console.error("Error deleting meal:", error);
+        alert("Error deleting meal entry");
+    }
+}
+// Delete activity function
+async function deleteActivity(activityId) {
+    if (!confirm("Are you sure you want to delete this activity entry?")) {
+        return;
+    }
+    try {
+        const response = await fetch(`/api/v1/activity/${activityId}`, {
+            method: "DELETE",
+        });
+        if (response.ok) {
+            window.location.reload();
+        }
+        else if (response.status === 404) {
+            alert("Activity entry not found or you don't have permission to delete it");
+        }
+        else {
+            alert("Failed to delete activity entry");
+        }
+    }
+    catch (error) {
+        console.error("Error deleting activity:", error);
+        alert("Error deleting activity entry");
+    }
+}
+// Make delete functions globally available
+window.deleteMeal = deleteMeal;
+window.deleteActivity = deleteActivity;
 // Populate meal type dropdown
 function populateMealTypeDropdown() {
     // TODO this is trash and shouldn't be hardcoded.
