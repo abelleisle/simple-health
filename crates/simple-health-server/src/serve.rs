@@ -11,7 +11,7 @@ use chrono_tz::Tz;
 use serde::Deserialize;
 use std::collections::HashMap;
 use tera::{Context, Tera};
-use tower_http::services::ServeDir;
+use tower_http::services::{ServeDir, ServeFile};
 
 use crate::auth::{authenticate::signout, required_auth};
 use crate::core::types::{Activity, Goal, Meal, UserSetting};
@@ -54,6 +54,10 @@ pub fn get_routes(state: ServerState) -> Router<ServerState> {
         .nest_service("/static/css", ServeDir::new(static_dir.join("css")))
         .nest_service("/static/js", ServeDir::new(static_dir.join("js")))
         .nest_service("/static/assets", ServeDir::new(static_dir.join("assets")))
+        .route_service(
+            "/favicon.ico",
+            ServeFile::new(static_dir.join("favicon.ico")),
+        )
         .layer(Extension(tera))
 }
 
