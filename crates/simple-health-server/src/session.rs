@@ -25,24 +25,16 @@ impl RefreshToken {
         rand::thread_rng().fill_bytes(&mut bytes);
         let token = URL_SAFE_NO_PAD.encode(&bytes);
 
-        // Check if user already has a valid refresh token
-        let existing = sqlx::query_as::<_, RefreshToken>(
-            "SELECT user_id, token, expires_at, created_at
-             FROM refresh_keys WHERE user_id = $1 AND expires_at > NOW()",
-        )
-        .bind(user_id)
-        .fetch_optional(pool)
-        .await?;
-
-        if let Some(existing_token) = existing {
-            log::debug!("Returning existing token for user {}", user_id);
-            return Ok(existing_token);
-        }
-
-        log::debug!("Creating new token for user {}", user_id);
-        // Insert new refresh token
+        log::debug!("Creating or updating refresh token for user {}", user_id);
+        // Upsert refresh token - handles race conditions by using ON CONFLICT
+        // If a token already exists for this user, update it with the new token and expiry
         sqlx::query_as::<_, RefreshToken>(
-            "INSERT INTO refresh_keys (user_id, token, expires_at) VALUES ($1, $2, NOW() + INTERVAL '30 days')
+            "INSERT INTO refresh_keys (user_id, token, expires_at)
+             VALUES ($1, $2, NOW() + INTERVAL '30 days')
+             ON CONFLICT (user_id)
+             DO UPDATE SET token = EXCLUDED.token,
+                           expires_at = EXCLUDED.expires_at,
+                           updated_at = NOW()
              RETURNING user_id, token, expires_at, created_at",
         )
         .bind(user_id)
