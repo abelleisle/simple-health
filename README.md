@@ -1,9 +1,15 @@
 # simple-health
 
-This is a stub mirror. The full source code for this commit is at:
+This is a stub mirror. The source code lives on Forgejo.
 
-https://git.bitcicle.com/andy/simple-health/src/commit/c63c1b286086ba8bfc9a438afc1807e7b6aa50f3
+**Repository:** https://git.bitcicle.com/andy/simple-health
 
-To browse or clone the full repository, visit:
+## Branches
 
-https://git.bitcicle.com/andy/simple-health
+| Branch | Commit | Link |
+|--------|--------|------|
+| `master` | `c63c1b286086` | [view](https://git.bitcicle.com/andy/simple-health/src/commit/c63c1b286086ba8bfc9a438afc1807e7b6aa50f3) |
+
+---
+
+*Last updated: 2026-02-18 06:24:17 UTC*
